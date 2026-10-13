@@ -416,280 +416,20 @@
         /* Official transparent pixel sprite of Paras (#046) */
         const LOGO_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/46.png";
 
-        /* Default Starter Card List (User's 628-card collection available for 1-click load or text import) */
-        const SAMPLE_COLLECTION_TEXT = `Pokémon: 420
-11 Doduo EVO 69
-10 Pikachu EVO 35
-9 Growlithe EVO 17
-3 Arcanine EVO 18
-9 Gastly EVO 47
-4 Haunter EVO 48
-9 Machop EVO 57
-4 Machoke EVO 58
-9 Diglett EVO 55
-4 Dugtrio EVO 56
-9 Caterpie EVO 3
-6 Metapod EVO 4
-8 Charmander EVO 9
-1 Charmander DRM 1
-5 Charmeleon EVO 10
-1 Charmeleon DRM 2
-1 Charizard DRM 3
-7 Drowzee EVO 49
-2 Drowzee SUM 59
-2 Hypno BKP 51
-9 Tangela EVO 8
-8 Nidoran♂ EVO 43
-7 Nidorino EVO 44
-1 Nidoking EVO 45
-8 Rattata EVO 66
-2 Raticate EVO 67
-8 Voltorb EVO 39
-4 Electrode EVO 40
-7 Magnemite EVO 37
-1 Magnemite FLI 34
-1 Magneton FLI 35
-1 Magnezone FLI 36
-8 Magikarp EVO 33
-8 Onix EVO 61
-7 Staryu EVO 30
-2 Starmie EVO 31
-7 Vulpix EVO 14
-7 Ponyta EVO 19
-6 Poliwag EVO 23
-2 Poliwhirl EVO 24
-6 Seel EVO 28
-2 Dewgong EVO 29
-6 Electabuzz EVO 41
-6 Porygon EVO 71
-6 Sandshrew EVO 54
-5 Magmar EVO 20
-5 Naganadel-GX SMP 125
-4 Weedle EVO 5
-3 Kakuna EVO 6
-4 Swablu DRM 56
-4 Altaria DRM 40
-1 Altaria-GX DRM 41
-4 Koffing EVO 50
-4 Farfetch'd EVO 68
-2 Alolan Ninetales-GX GRI 22
-1 Alolan Ninetales-GX LOT 205
-1 Alolan Ninetales-GX GRI 132
-3 Torchic DRM 4
-2 Combusken DRM 5
-1 Blaziken DRM 6
-1 Blaziken-GX CES 153
-1 Blaziken-GX CES 28
-2 Lurantis-GX SUM 15
-1 Lurantis-GX SUM 138
-2 Reshiram-GX DRM 11
-1 Reshiram-GX HIF 120
-1 Cutiefly LOT 145
-1 Cutiefly BUS 95
-2 Ribombee BUS 96
-2 Mewtwo EVO 51
-2 Snorlax-GX SMP 5
-2 Decidueye-GX SUM 12
-2 Altaria-EX FCO 123
-2 Lycanroc-GX SMP 14
-2 Kingdra-GX DRM 18
-1 Salamence-GX DRM 73
-1 Salamence-GX DRM 44
-1 Pidgeot-EX EVO 64
-1 M Pidgeot-EX EVO 105
-1 M Pidgeot-EX EVO 65
-1 Slowbro-EX EVO 26
-1 M Slowbro-EX EVO 27
-1 Bounsweet SUM 18
-1 Steenee SUM 19
-1 Tsareena-GX SMP 56
-1 Cacnea CES 19
-1 Cacturne CES 20
-1 Zoroark BKT 91
-1 Zoroark BREAK BKT 92
-1 Alolan Grimer SUM 57
-1 Alolan Muk-GX BUS 84
-1 Venonat PHF 1
-1 Venomoth PHF 2
-1 Ralts LOT 139
-1 Kirlia LOT 140
-1 Gardevoir AOR 54
-1 Gardevoir-GX BUS 93
-1 Cosmog UPR 60
-1 Cosmoem SUM 65
-2 Solgaleo-GX SMP 16
-1 Lunala-GX SMP 103
-1 Beldum CES 92
-1 Metang AOR 48
-1 Metagross-GX GRI 85
-1 Bronzor FCO 60
-1 Bronzong PHF 61
-1 Bronzong BREAK FCO 62
-1 Scyther LOT 3
-1 Scizor-GX CES 158
-1 Numel BKP 12
-1 Camerupt CIN 14
-1 Eevee SUM 101
-1 Espeon LOT 89
-1 Sylveon-GX GRI 92a
-1 Alolan Geodude GRI 40
-1 Alolan Graveler GRI 41
-1 Alolan Golem-GX CIN 34
-1 Grubbin SUM 13
-1 Charjabug SUM 51
-2 Vikavolt-GX GRI 45
-1 Vikavolt-GX GRI 134
-1 Goomy PHF 75
-1 Sliggoo PHF 76
-1 Goodra FLF 74
-1 Dratini DRM 35
-1 Dragonair DRM 36
-1 Dragonite-GX DRM 37
-1 Hitmonchan EVO 62
-1 Exeggutor EVO 109
-1 M Charizard-EX EVO 101
-1 M Blastoise-EX EVO 102
-1 Dragonite-EX EVO 72
-1 Sableye AOR 44
-1 Zoroark-GX SMP 84
-1 Malamar-EX PHF 115
-1 Carnivine SLG 6
-1 Steelix-EX STS 67
-1 Kartana-GX CIN 106
-1 Genesect-GX LOT 130
-1 Volcanion STS 25
-1 Heatmor DRM 10
-1 Victini Prism Star DRM 7
-1 Unown LOT 91
-1 Mew FCO 29
-1 Miltank LOT 158
-1 Toxicroak-EX FLF 102
-1 Flygon-EX XYP 61
-1 Toxapex-GX GRI 136
-1 Leafeon-EX GEN 10
-1 Tapu Bulu-GX SMP 32
-1 Trevenant-EX PRC 145
-1 Ampharos-EX AOR 27
-1 Zapdos EVO 42
-1 Dialga-GX FLI 125
-1 Genesect-EX FCO 120
-1 Stakataka-GX CES 102
-1 Salazzle-GX SMP 63
-1 Magcargo-GX LOT 44
-1 Ninetales BREAK EVO 16
-1 Blacephalon-GX LOT 52
-1 Flareon-EX GEN-RC 28
-1 Tapu Lele-GX GRI 60
-1 Sigilyph-GX LOT 98
-1 Gallade-EX XYP 45
-1 Necrozma-GX SMP 58
-1 Buzzwole-GX SMP 69
-1 M Lucario-EX FFI 55a
-1 Regirock-EX FCO 43
-1 Lucario-GX SMP 100
-1 Mimikyu-GX LOT 149
-1 M Gardevoir-EX STS 79
-1 Lapras-GX SUM 35
-1 Palkia XYP 75
-1 Suicune-GX LOT 60
-1 Articuno-GX CES 31
-1 Golduck BREAK BKP 18
-1 Aurorus-EX XYP 102
-1 Wishiwashi-GX GRI 38
-1 Palkia-GX UPR 101
-1 Tapu Koko-GX SMP 50
-1 Xurkitree FLI 39
-
-Trainer: 191
-4 Tierno KSS 39
-4 Hau CES 132
-4 Hau SUM 120
-4 Professor Kukui SUM 128
-4 Wally ROS 94
-3 Professor Oak's Hint EVO 84
-3 Pokémon Fan Club UPR 133
-3 Cynthia UPR 119
-3 Fisherman BKT 136
-2 Judge FLI 108
-2 Ace Trainer AOR 69
-2 Blacksmith FLF 88
-2 Mallow GRI 127
-2 Guzma BUS 115
-2 Brock's Grit EVO 74
-2 Zinnia DRM 64
-1 Misty's Determination EVO 80
-1 Ninja Boy STS 103
-1 Delinquent BKP 98
-1 Team Rocket's Handiwork FCO 112
-1 Faba LOT 173
-1 Kiawe BUS 116
-1 Blaine's Last Stand DRM 69
-1 Copycat CES 127
-1 Pokémon Center Lady GEN 68
-1 Battle Reporter FFI 109
-1 AZ PHF 91
-12 Roller Skates XY 125
-10 Timer Ball SUM 134
-9 Professor's Letter XY 123
-6 Energy Retrieval EVO 77
-5 Ultra Ball FCO 113
-5 Evosoda XY 116
-4 Devolution Spray EVO 76
-4 Venusaur Spirit Link EVO 89
-4 Charizard Spirit Link EVO 75
-4 Super Potion EVO 87
-4 Evosoda GEN 62
-4 Moomoo Milk LOT 185
-4 Mysterious Treasure FLI 113
-3 Pidgeot Spirit Link EVO 81
-3 Blastoise Spirit Link EVO 73
-3 Full Heal EVO 78
-3 Switch EVO 88
-2 Maintenance EVO 79
-2 Ultra Ball SUM 135
-2 Potion SUM 127
-2 Switch ROS 91
-2 Fiery Flint DRM 60
-2 Revive EVO 85
-2 Rare Candy PRC 135
-2 Pokédex EVO 82
-2 Rare Candy CES 142
-1 Eco Arm AOR 71
-1 Rescue Stretcher GRI 130
-1 Rare Candy SUM 129
-1 Energy Recycler GRI 123
-1 Energy Retrieval SUM 116
-1 Energy Retrieval PRC 126
-1 Fiery Flint DRM 76
-1 Poké Ball SUM 125
-1 Poké Ball KSS 35
-1 Special Charge STS 105
-3 Fighting Fury Belt BKP 99
-2 Hard Charm XY 119
-2 Dragon Talon DRM 59
-1 Slowbro Spirit Link EVO 86
-1 Trick Coin PHF 108
-1 Metal Frying Pan FLI 112
-1 Wishful Baton BUS 128
-1 Sea of Nothingness CIN 99
-1 Reverse Valley BKP 110
-1 Mt. Coronet UPR 130
-1 Scorched Earth PRC 138
-1 Mountain Ring FFI 97
-1 Life Forest Prism Star LOT 180
-1 Rough Seas PRC 137
-1 Devoured Field CIN 93
-
-Energy: 17
-4 Double Colorless Energy EVO 90
-2 Herbal Energy FFI 103
-2 Double Colorless Energy PHF 111
-2 Shield Energy PRC 143
-2 Double Colorless Energy SUM 136
-2 Rainbow Energy SUM 137
-1 Burning Energy BKT 151
-1 Beast Energy Prism Star FLI 117
-1 Double Dragon Energy ROS 97`;
+        const META_CACHE_KEY = 'pokedex_kiosk_meta_cache_v1';
+        const loadMetaCache = () => {
+            try {
+                const raw = localStorage.getItem(META_CACHE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                return {};
+            }
+        };
+        const saveMetaCache = (cacheObj) => {
+            try {
+                localStorage.setItem(META_CACHE_KEY, JSON.stringify(cacheObj));
+            } catch (e) {}
+        };
 
         const GEN_THEMES = [
             {
@@ -1049,6 +789,7 @@ Energy: 17
             const lines = rawText.split(/\r?\n/);
             let currentCategory = 'Pokémon';
             const cardMap = new Map();
+            const metaCache = loadMetaCache();
 
             for (let rawLine of lines) {
                 const line = rawLine.trim();
@@ -1083,6 +824,7 @@ Energy: 17
                     const imageUrl = `https://images.pokemontcg.io/${apiSet}/${apiNumber}_hires.png`;
                     const smallImageUrl = `https://images.pokemontcg.io/${apiSet}/${apiNumber}.png`;
                     const setIconUrl = `https://images.pokemontcg.io/${apiSet}/symbol.png`;
+                    const cached = metaCache[apiId.toLowerCase()];
 
                     if (cardMap.has(uniqueKey)) {
                         cardMap.get(uniqueKey).count += count;
@@ -1098,15 +840,15 @@ Energy: 17
                             imageUrl,
                             smallImageUrl,
                             setIconUrl,
-                            types: [],
-                            subtypes: [],
-                            hp: '',
-                            attacks: [],
-                            abilities: [],
-                            rules: [],
-                            prices: null,
+                            types: cached?.types || [],
+                            subtypes: cached?.subtypes || [],
+                            hp: cached?.hp || '',
+                            attacks: cached?.attacks || [],
+                            abilities: cached?.abilities || [],
+                            rules: cached?.rules || [],
+                            prices: cached?.prices || null,
                             rating: 0,
-                            enriched: false
+                            enriched: Boolean(cached)
                         });
                     }
                 }
@@ -1863,10 +1605,10 @@ Energy: 17
                     const saved = localStorage.getItem('pokedex_kiosk_cards_v1_4');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                        if (Array.isArray(parsed)) return parsed;
                     }
                 } catch (e) {}
-                return parseLimitlessText(SAMPLE_COLLECTION_TEXT);
+                return [];
             });
 
             const [decks, setDecks] = useState(() => {
@@ -1921,9 +1663,12 @@ Energy: 17
             const fileInputRef = useRef(null);
 
             useEffect(() => {
-                try {
-                    localStorage.setItem('pokedex_kiosk_cards_v1_4', JSON.stringify(cards));
-                } catch (e) {}
+                const timer = setTimeout(() => {
+                    try {
+                        localStorage.setItem('pokedex_kiosk_cards_v1_4', JSON.stringify(cards));
+                    } catch (e) {}
+                }, 400);
+                return () => clearTimeout(timer);
             }, [cards]);
 
             useEffect(() => {
@@ -1972,77 +1717,109 @@ Energy: 17
                 if (unenriched.length === 0 || isEnriching) return;
 
                 let cancelled = false;
-                const enrichBatch = async () => {
-                    setIsEnriching(true);
-                    const batch = unenriched.slice(0, 10);
+                const BATCH_SIZE = 30;
+                const CONCURRENCY = 5; // 5 parallel requests * 30 cards = 150 unique cards per wave
+
+                const fetchSingleBatch = async (batch) => {
                     const queryStr = batch.map(c => `id:"${c.apiId}"`).join(' OR ');
                     const encodedQuery = encodeURIComponent(`(${queryStr})`);
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&select=id,types,subtypes,supertype,hp,attacks,abilities,rules,tcgplayer,cardmarket`;
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,types,subtypes,supertype,hp,attacks,abilities,rules,tcgplayer,cardmarket`;
 
                     try {
                         const res = await fetch(url);
                         if (res.status === 429) {
-                            await new Promise(r => setTimeout(r, 4000));
-                            if (!cancelled) setIsEnriching(false);
-                            return;
+                            return { rateLimited: true, batch, items: [] };
                         }
                         if (res.ok) {
                             const data = await res.json();
-                            const apiMap = new Map();
-                            (data.data || []).forEach(item => {
-                                apiMap.set(item.id.toLowerCase(), item);
-                            });
-
-                            if (!cancelled) {
-                                setCards(prev => prev.map(card => {
-                                    if (!batch.some(b => b.id === card.id)) return card;
-                                    const found = apiMap.get(card.apiId.toLowerCase());
-                                    if (!found) return { ...card, enriched: true };
-
-                                    let extractedPrice = card.prices;
-                                    if (!extractedPrice && found.tcgplayer?.prices) {
-                                        const p = found.tcgplayer.prices;
-                                        const firstKey = Object.keys(p)[0];
-                                        const v = p[firstKey] || {};
-                                        extractedPrice = {
-                                            source: 'TCGPlayer',
-                                            updatedAt: found.tcgplayer.updatedAt || '',
-                                            market: v.market ?? v.mid ?? null,
-                                            low: v.low ?? null,
-                                            high: v.high ?? null,
-                                            holofoil: p.holofoil?.market ?? null
-                                        };
-                                    }
-
-                                    return {
-                                        ...card,
-                                        types: found.types || card.types || [],
-                                        subtypes: found.subtypes || card.subtypes || [],
-                                        hp: found.hp || card.hp || '',
-                                        attacks: found.attacks || card.attacks || [],
-                                        abilities: found.abilities || card.abilities || [],
-                                        rules: found.rules || card.rules || [],
-                                        prices: extractedPrice || null,
-                                        enriched: true
-                                    };
-                                }));
-                            }
-                        } else {
-                            // Mark batch enriched on 404/400 so queue doesn't stall
-                            if (!cancelled) {
-                                setCards(prev => prev.map(c => batch.some(b => b.id === c.id) ? { ...c, enriched: true } : c));
-                            }
+                            return { rateLimited: false, batch, items: data.data || [] };
                         }
+                        return { rateLimited: false, batch, items: [] };
                     } catch (err) {
-                        await new Promise(r => setTimeout(r, 2500));
-                    } finally {
-                        if (!cancelled) {
-                            setTimeout(() => setIsEnriching(false), 900);
-                        }
+                        return { rateLimited: false, batch, items: [], networkError: true };
                     }
                 };
 
-                enrichBatch();
+                const enrichWave = async () => {
+                    setIsEnriching(true);
+                    const waveCards = unenriched.slice(0, BATCH_SIZE * CONCURRENCY);
+                    const subBatches = [];
+                    for (let i = 0; i < waveCards.length; i += BATCH_SIZE) {
+                        subBatches.push(waveCards.slice(i, i + BATCH_SIZE));
+                    }
+
+                    const results = await Promise.all(subBatches.map(b => fetchSingleBatch(b)));
+                    if (cancelled) return;
+
+                    const hitRateLimit = results.some(r => r.rateLimited);
+                    const apiMap = new Map();
+                    const processedIds = new Set();
+
+                    results.forEach(res => {
+                        if (!res.rateLimited && !res.networkError) {
+                            res.batch.forEach(c => processedIds.add(c.id));
+                            res.items.forEach(item => {
+                                apiMap.set(item.id.toLowerCase(), item);
+                            });
+                        }
+                    });
+
+                    if (processedIds.size > 0) {
+                        const metaCache = loadMetaCache();
+                        setCards(prev => prev.map(card => {
+                            if (!processedIds.has(card.id)) return card;
+                            const found = apiMap.get(card.apiId.toLowerCase());
+                            if (!found) return { ...card, enriched: true };
+
+                            let extractedPrice = card.prices;
+                            if (!extractedPrice && found.tcgplayer?.prices) {
+                                const p = found.tcgplayer.prices;
+                                const firstKey = Object.keys(p)[0];
+                                const v = p[firstKey] || {};
+                                extractedPrice = {
+                                    source: 'TCGPlayer',
+                                    updatedAt: found.tcgplayer.updatedAt || '',
+                                    market: v.market ?? v.mid ?? null,
+                                    low: v.low ?? null,
+                                    high: v.high ?? null,
+                                    holofoil: p.holofoil?.market ?? null
+                                };
+                            }
+
+                            const updatedCard = {
+                                ...card,
+                                types: found.types || card.types || [],
+                                subtypes: found.subtypes || card.subtypes || [],
+                                hp: found.hp || card.hp || '',
+                                attacks: found.attacks || card.attacks || [],
+                                abilities: found.abilities || card.abilities || [],
+                                rules: found.rules || card.rules || [],
+                                prices: extractedPrice || null,
+                                enriched: true
+                            };
+
+                            metaCache[card.apiId.toLowerCase()] = {
+                                types: updatedCard.types,
+                                subtypes: updatedCard.subtypes,
+                                hp: updatedCard.hp,
+                                attacks: updatedCard.attacks,
+                                abilities: updatedCard.abilities,
+                                rules: updatedCard.rules,
+                                prices: updatedCard.prices
+                            };
+
+                            return updatedCard;
+                        }));
+                        saveMetaCache(metaCache);
+                    }
+
+                    const nextDelay = hitRateLimit ? 2500 : 80;
+                    setTimeout(() => {
+                        if (!cancelled) setIsEnriching(false);
+                    }, nextDelay);
+                };
+
+                enrichWave();
                 return () => { cancelled = true; };
             }, [cards, isEnriching]);
 
@@ -2328,7 +2105,7 @@ Energy: 17
                                             {enrichPercent < 100 && (
                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-950 text-sky-300 border border-sky-500/50 text-[10px] font-bold">
                                                     <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
-                                                    Syncing Metadata {enrichPercent}%
+                                                    Syncing {enrichedCount}/{cards.length} ({enrichPercent}%)
                                                 </span>
                                             )}
                                         </div>
@@ -2582,27 +2359,18 @@ Energy: 17
                                         </h3>
                                         <p className="text-xs text-slate-300 mb-4 leading-relaxed">
                                             {cards.length === 0
-                                                ? 'Import a Limitless TCG decklist or load the default 628-card starter collection below.'
+                                                ? 'Import a Limitless TCG decklist or load a saved JSON backup to populate your Pokedex.'
                                                 : 'Try clearing your search filters or toggling "Include Deck Cards" on.'}
                                         </p>
                                         <div className="flex flex-wrap justify-center gap-2">
                                             {cards.length === 0 ? (
-                                                <>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowImportModal(true)}
-                                                        className="px-4 py-2 rounded text-xs font-extrabold theme-btn-primary"
-                                                    >
-                                                        Import Text List
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setCards(parseLimitlessText(SAMPLE_COLLECTION_TEXT))}
-                                                        className="px-4 py-2 rounded text-xs font-bold oras-subpanel hover:bg-slate-800 text-slate-200"
-                                                    >
-                                                        Load Starter Collection (628 Cards)
-                                                    </button>
-                                                </>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowImportModal(true)}
+                                                    className="px-4 py-2 rounded text-xs font-extrabold theme-btn-primary"
+                                                >
+                                                    Import Text List
+                                                </button>
                                             ) : (
                                                 <button
                                                     type="button"
@@ -2913,14 +2681,8 @@ Energy: 17
                                     placeholder={`Pokémon: 21\n10 Pikachu EVO 35\n1 Tapu Lele-GX GRI 60\n\nTrainer: 10\n4 Cynthia UPR 119`}
                                     className="w-full p-3 rounded text-xs font-mono bg-slate-950 border border-slate-700 text-white focus:outline-none"
                                 />
-                                <div className="flex flex-wrap justify-between items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setImportText(SAMPLE_COLLECTION_TEXT)}
-                                        className="px-3 py-1.5 rounded text-xs font-bold oras-subpanel text-sky-300 hover:bg-slate-800"
-                                    >
-                                        Fill with 628-Card Starter List
-                                    </button>
+                                {}
+                                <div className="flex flex-wrap justify-end items-center gap-2">
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
@@ -2942,27 +2704,27 @@ Energy: 17
                         </div>
                     )}
 
-                    {/* Clear Database Confirmation Modal */}
+                    {}
                     {showClearModal && (
                         <div
                             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
                             onClick={() => setShowClearModal(false)}
                         >
                             <div
-                                className="oras-modal-panel w-full max-w-md p-5 space-y-4 text-center"
+                                className="oras-modal-panel w-full max-w-md p-5 space-y-4"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <h3 className="text-base font-extrabold text-rose-400 gen-title-font">
                                     Clear Entire Database?
                                 </h3>
                                 <p className="text-xs text-slate-300 leading-relaxed">
-                                    This will clear all cards from your current browser session so you can test importing a fresh list from scratch.
+                                    This will remove all imported cards and ratings from your local database. You can always re-import your text list or JSON backup at any time.
                                 </p>
-                                <div className="flex justify-center gap-3 pt-2">
+                                <div className="flex justify-end gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setShowClearModal(false)}
-                                        className="px-4 py-2 rounded text-xs font-bold bg-slate-800 text-slate-300 hover:text-white"
+                                        className="px-4 py-1.5 rounded text-xs font-bold bg-slate-800 text-slate-300 hover:text-white"
                                     >
                                         Cancel
                                     </button>
@@ -2970,13 +2732,13 @@ Energy: 17
                                         type="button"
                                         onClick={() => {
                                             setCards([]);
-                                            setDecks([{ id: 'deck-default-1', name: 'Primal ORAS Deck', type: 'Fire', sleeveId: 'evo-gold', cards: {} }]);
-                                            localStorage.setItem('pokedex_kiosk_cards_v1_4', JSON.stringify([]));
+                                            setDecks(prev => prev.map(d => ({ ...d, cards: {} })));
+                                            localStorage.removeItem('pokedex_kiosk_cards_v1_4');
                                             setShowClearModal(false);
                                         }}
-                                        className="px-4 py-2 rounded text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white"
+                                        className="px-4 py-1.5 rounded text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white"
                                     >
-                                        Yes, Clear Database
+                                        Yes, Wipe Database
                                     </button>
                                 </div>
                             </div>
