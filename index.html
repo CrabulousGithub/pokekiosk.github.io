@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PokéKiosk - Database Viewer</title>
+    <title>PokéKiosk - Private Database</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -302,9 +302,9 @@
                         
                         // One-time migration to repair databases broken by previous API rate limits
                         const version = localStorage.getItem('pokeKioskVersion');
-                        if (version !== '1.2') {
+                        if (version !== '1.3') {
                             parsed = parsed.map(c => ({ ...c, enriched: false }));
-                            localStorage.setItem('pokeKioskVersion', '1.2');
+                            localStorage.setItem('pokeKioskVersion', '1.3');
                         }
                         
                         setDbCards(parsed);
@@ -524,17 +524,19 @@
                     
                     let matchesTrainer = true;
                     if (categoryFilter === 'Trainer' && trainerFilter !== 'All') {
-                        matchesTrainer = card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes(trainerFilter.toLowerCase()));
+                        const inSubtype = card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes(trainerFilter.toLowerCase()));
+                        // Fallback: Check if the card's printed rules specifically mention the trainer class (e.g., "This Stadium stays in play")
+                        const inRules = card.rules && card.rules.some(r => r.toLowerCase().includes(trainerFilter.toLowerCase()));
+                        matchesTrainer = inSubtype || inRules;
                     }
 
                     let matchesEnergy = true;
                     if (categoryFilter === 'Energy' && energyFilter !== 'All') {
-                        // Smart fallback in case API enrichment hasn't fetched the subtype yet
+                        const basicEnergyNames = ['grass energy', 'fire energy', 'water energy', 'lightning energy', 'psychic energy', 'fighting energy', 'darkness energy', 'metal energy', 'fairy energy'];
+                        
+                        // Smart fallback: If it has the Special subtype, OR if its name isn't exactly a basic energy name
                         const isSpecial = (card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes('special'))) || 
-                                          card.name.toLowerCase().includes('special') || 
-                                          card.name.toLowerCase().includes('double') || 
-                                          card.name.toLowerCase().includes('rainbow') ||
-                                          card.name.toLowerCase().includes('prism');
+                                          !basicEnergyNames.includes(card.name.toLowerCase().trim());
                         
                         if (energyFilter === 'Special') matchesEnergy = isSpecial;
                         if (energyFilter === 'Basic') matchesEnergy = !isSpecial;
