@@ -524,10 +524,7 @@
                     
                     let matchesTrainer = true;
                     if (categoryFilter === 'Trainer' && trainerFilter !== 'All') {
-                        const inSubtype = card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes(trainerFilter.toLowerCase()));
-                        // Fallback: Check if the card's printed rules specifically mention the trainer class (e.g., "This Stadium stays in play")
-                        const inRules = card.rules && card.rules.some(r => r.toLowerCase().includes(trainerFilter.toLowerCase()));
-                        matchesTrainer = inSubtype || inRules;
+                        matchesTrainer = card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes(trainerFilter.toLowerCase()));
                     }
 
                     let matchesEnergy = true;
