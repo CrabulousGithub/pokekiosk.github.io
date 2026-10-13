@@ -3,29 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PokéKiosk - Private Database</title>
+    <title>Deckbuilder Pokedex</title>
     
+    <!-- Static Tailwind v2 fallback guarantees layout/utility classes work even if Play CDN is blocked on mobile/GitHub -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@600;700;800;900&family=Press+Start+2P&display=swap');
         
+        :root {
+            --theme-bg: #091326;
+            --theme-bg-secondary: #10203d;
+            --theme-panel-solid: #112240;
+            --theme-panel: rgba(17, 34, 64, 0.96);
+            --theme-border: #e11d48;
+            --theme-border-secondary: #0284c7;
+            --theme-accent: #e11d48;
+            --theme-accent-hover: #be123c;
+            --theme-glow: rgba(225, 29, 72, 0.45);
+            --theme-text-accent: #38bdf8;
+            --theme-gradient: radial-gradient(circle at 12% 15%, rgba(225, 29, 72, 0.22), transparent 50%),
+                              radial-gradient(circle at 88% 85%, rgba(2, 132, 199, 0.25), transparent 55%);
+            --gen-radius: 10px;
+            --gen-card-clip: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+            --gen-header-border: 2px solid var(--theme-border);
+            --gen-font-display: 'Orbitron', 'Inter', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Explicit Native Fallbacks for Tailwind v3 classes on mobile/offline browsers */
+        .hidden { display: none !important; }
+        button {
+            background: transparent;
+            color: inherit;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        input, textarea, select {
+            font-family: inherit;
+            color: #f8fafc;
+            background-color: #091326;
+        }
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* Explicit Slate & Aspect Ratio Fallbacks so Mobile never turns transparent */
+        .bg-slate-950, .bg-slate-950\/90 { background-color: rgba(4, 9, 20, 0.94) !important; }
+        .bg-slate-900, .bg-slate-900\/95, .bg-slate-900\/90, .bg-slate-900\/80, .bg-slate-900\/70, .bg-slate-900\/60 { background-color: var(--theme-bg) !important; }
+        .bg-slate-800, .bg-slate-800\/95, .bg-slate-800\/90, .bg-slate-800\/80, .bg-slate-800\/70, .bg-slate-800\/50 { background-color: var(--theme-panel-solid) !important; }
+        .bg-slate-700, .bg-slate-700\/80 { background-color: #263859 !important; }
+        .border-slate-800, .border-slate-700, .border-slate-700\/80, .border-slate-700\/70, .border-slate-700\/50, .border-slate-600 { border-color: var(--theme-border) !important; }
+        .text-slate-200 { color: #e2e8f0 !important; }
+        .text-slate-300 { color: #cbd5e1 !important; }
+        .text-slate-400 { color: #94a3b8 !important; }
+        .text-slate-500 { color: #64748b !important; }
+        .card-aspect-ratio {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 63 / 88;
+        }
+        @supports not (aspect-ratio: 63 / 88) {
+            .card-aspect-ratio {
+                padding-top: 139.68%;
+                height: 0;
+            }
+            .card-aspect-ratio > img, .card-aspect-ratio > div {
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+            }
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Tailwind slate-900 */
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--theme-bg);
+            background-image: var(--theme-gradient);
+            background-attachment: fixed;
             color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+            transition: background-color 0.4s ease, background-image 0.4s ease;
+        }
+
+        /* Generation-Specific Background Overlays & Styles */
+        body.gen-1 {
+            --gen-radius: 2px;
+            --gen-card-clip: none;
+            --gen-font-display: 'Press Start 2P', monospace;
+            --gen-border-style: double;
+            --gen-border-width: 4px;
+            background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0), var(--theme-gradient);
+            background-size: 12px 12px, 100% 100%;
+        }
+        body.gen-2 {
+            --gen-radius: 6px;
+            --gen-card-clip: none;
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+            background-image: repeating-linear-gradient(0deg, rgba(250, 204, 21, 0.03) 0px, rgba(250, 204, 21, 0.03) 2px, transparent 2px, transparent 6px), var(--theme-gradient);
+        }
+        body.gen-3 {
+            --gen-radius: 8px;
+            --gen-card-clip: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+        }
+        body.gen-4 {
+            --gen-radius: 12px;
+            --gen-card-clip: none;
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: ridge;
+            --gen-border-width: 3px;
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), var(--theme-gradient);
+            background-size: 20px 20px, 20px 20px, 100% 100%;
+        }
+        body.gen-5 {
+            --gen-radius: 4px;
+            --gen-card-clip: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 10px, transparent 10px, transparent 20px), var(--theme-gradient);
+        }
+        /* DEFAULT: Gen 6 - Omega Ruby / Alpha Sapphire PokéNav Plus / DexNav */
+        body.gen-6 {
+            --gen-radius: 10px;
+            --gen-card-clip: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(56, 189, 248, 0.035) 0px, rgba(56, 189, 248, 0.035) 1px, transparent 1px, transparent 4px),
+                linear-gradient(90deg, rgba(225, 29, 72, 0.04) 1px, transparent 1px),
+                var(--theme-gradient);
+            background-size: 100% 4px, 32px 32px, 100% 100%;
+        }
+        body.gen-7 {
+            --gen-radius: 22px;
+            --gen-card-clip: none;
+            --gen-font-display: 'Inter', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 3px;
+        }
+        body.gen-8 {
+            --gen-radius: 6px;
+            --gen-card-clip: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+        }
+        body.gen-9 {
+            --gen-radius: 16px;
+            --gen-card-clip: none;
+            --gen-font-display: 'Orbitron', sans-serif;
+            --gen-border-style: solid;
+            --gen-border-width: 2px;
+            background-image: radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.14), transparent 45%), var(--theme-gradient);
+        }
+
+        .gen-title-font {
+            font-family: var(--gen-font-display);
+            letter-spacing: 0.03em;
+        }
+        body.gen-1 .gen-title-font {
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 5px; border: 2px solid #1e293b; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(9, 19, 38, 0.8); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--theme-border); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--theme-accent); }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -36,54 +200,664 @@
             to { opacity: 1; transform: scale(1); }
         }
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 15px -3px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 25px 2px rgba(59, 130, 246, 0.6); }
+        @keyframes holoShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes orasPulse {
+            0%, 100% { box-shadow: 0 0 12px var(--theme-glow), inset 0 0 12px rgba(56, 189, 248, 0.15); }
+            50% { box-shadow: 0 0 22px var(--theme-glow), inset 0 0 18px rgba(225, 29, 72, 0.25); }
         }
         
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
-        
-        .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .card-hover:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
-            z-index: 10;
+        .animate-fade-in { animation: fadeIn 0.22s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+
+        /* ORAS / Gen-Aware Header & Panels */
+        .theme-header {
+            background-color: var(--theme-panel-solid);
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            border-bottom: var(--gen-border-width) var(--gen-border-style) var(--theme-border);
+            box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.6), 0 2px 10px var(--theme-glow);
+            position: relative;
+        }
+        /* ORAS Dual Ruby/Sapphire Tech Strip along top of header */
+        .oras-top-strip {
+            height: 4px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-text-accent) 50%, var(--theme-accent) 100%);
+            background-size: 200% 100%;
+            animation: holoShimmer 6s linear infinite;
         }
 
-        /* Glassmorphism */
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .theme-card {
+            background-color: var(--theme-panel-solid);
+            background-image: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.25) 100%);
+            border: var(--gen-border-width) var(--gen-border-style) var(--theme-border);
+            border-radius: var(--gen-radius);
+            clip-path: var(--gen-card-clip);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.25s ease;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+        }
+        .theme-card:hover {
+            transform: translateY(-5px) scale(1.015);
+            box-shadow: 0 12px 28px -4px var(--theme-glow);
+            border-color: var(--theme-text-accent);
+            z-index: 10;
+        }
+        .theme-btn-primary {
+            background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-hover) 100%);
+            color: #ffffff !important;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: var(--gen-radius);
+            box-shadow: 0 4px 14px -2px var(--theme-glow);
+            transition: all 0.2s ease;
+        }
+        .theme-btn-primary:hover {
+            filter: brightness(1.12);
+            transform: translateY(-1px);
+        }
+        .theme-pill-active {
+            background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-hover) 100%) !important;
+            border-color: var(--theme-text-accent) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 12px var(--theme-glow);
+        }
+
+        /* Opaque Mobile-Safe Drawer & Modals */
+        .oras-deck-drawer {
+            background-color: var(--theme-panel-solid) !important;
+            background-image: linear-gradient(180deg, var(--theme-bg-secondary) 0%, var(--theme-bg) 100%) !important;
+            border-left: 2px solid var(--theme-border);
+            box-shadow: -10px 0 35px rgba(0, 0, 0, 0.85);
+            color: #f8fafc;
+        }
+        .oras-modal-panel {
+            background-color: var(--theme-panel-solid) !important;
+            background-image: linear-gradient(165deg, var(--theme-bg-secondary) 0%, var(--theme-bg) 100%) !important;
+            border: 2px solid var(--theme-border);
+            border-radius: var(--gen-radius);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px var(--theme-glow);
+            color: #f8fafc;
+        }
+        .oras-subpanel {
+            background-color: var(--theme-bg) !important;
+            border: 1px solid var(--theme-border);
+            border-radius: var(--gen-radius);
+        }
+
+        /* 3D Type Coin */
+        .coin-scene {
+            width: 48px;
+            height: 48px;
+            perspective: 600px;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .coin-object {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 9999px;
+        }
+        .coin-face {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 3px rgba(255,255,255,0.35),
+                        inset 0 0 10px rgba(0,0,0,0.45),
+                        0 4px 14px var(--theme-glow);
+            overflow: hidden;
+        }
+        .coin-shine {
+            position: absolute;
+            inset: -40%;
+            background: linear-gradient(135deg, transparent 35%, rgba(255,255,255,0.45) 50%, transparent 65%);
+            pointer-events: none;
+            transition: transform 0.6s ease;
+        }
+        .coin-scene:hover .coin-shine {
+            transform: translate(25%, 25%);
+        }
+
+        /* Generation Box Switcher next to Coin */
+        .gen-box-btn {
+            min-width: 48px;
+            height: 48px;
+            background-color: var(--theme-bg);
+            border: 2px solid var(--theme-text-accent);
+            border-radius: var(--gen-radius);
+            clip-path: var(--gen-card-clip);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            animation: orasPulse 4s infinite ease-in-out;
+            transition: transform 0.18s ease, border-color 0.2s ease;
+            padding: 2px 8px;
+        }
+        .gen-box-btn:hover {
+            transform: scale(1.06);
+            border-color: #ffffff;
+        }
+
+        /* Toggle Slider for Deck Cards */
+        .oras-slider-track {
+            width: 44px;
+            height: 24px;
+            border-radius: 9999px;
+            position: relative;
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+            border: 2px solid var(--theme-border);
+            flex-shrink: 0;
+        }
+        .oras-slider-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 9999px;
+            background-color: #ffffff;
+            position: absolute;
+            top: 2px;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* ETB Sleeve Visual Effects */
+        .etb-sleeve-shimmer {
+            background-size: 200% 200%;
+            animation: holoShimmer 5s ease infinite;
+        }
+
+        /* Responsive Grid Fallback */
+        .cards-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 1rem;
+        }
+        @media (min-width: 768px) {
+            .cards-grid-layout {
+                grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+                gap: 1.4rem;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col overflow-hidden">
     <div id="root" class="flex-grow flex flex-col h-screen overflow-hidden"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        const Icons = {
-            Search: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
-            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
-            Pokeball: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="2.05" y1="12" x2="21.95" y2="12"></line><circle cx="12" cy="12" r="3"></circle></svg>,
-            Upload: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>,
-            Filter: () => <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>,
-            Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        const LOGO_URL = "https://cdn.discordapp.com/attachments/1206757828950233178/1559379908914839674/crabulous_w_clippy.png?ex=6acedd36&is=6acd8bb6&hm=60d7747d6dedfa3f4f1abee4ae386e18548b33fdbd24281903de0a94da796919&";
+
+        const GEN_THEMES = [
+            {
+                gen: 1,
+                code: 'RBY',
+                name: 'Kanto Pokédex OS',
+                subtitle: 'Red • Blue • Yellow',
+                bgOverride: '#1a090d',
+                panelSolid: '#2b1017',
+                borderOverride: '#ef4444',
+                accentOverride: '#dc2626',
+                textAccentOverride: '#fde047'
+            },
+            {
+                gen: 2,
+                code: 'GSC',
+                name: 'Johto Pokégear',
+                subtitle: 'Gold • Silver • Crystal',
+                bgOverride: '#0c1629',
+                panelSolid: '#152542',
+                borderOverride: '#eab308',
+                accentOverride: '#ca8a04',
+                textAccentOverride: '#fef08a'
+            },
+            {
+                gen: 3,
+                code: 'RSE',
+                name: 'Hoenn PokéNav GBA',
+                subtitle: 'Ruby • Sapphire • Emerald',
+                bgOverride: '#071c18',
+                panelSolid: '#0e2e28',
+                borderOverride: '#10b981',
+                accentOverride: '#059669',
+                textAccentOverride: '#6ee7b7'
+            },
+            {
+                gen: 4,
+                code: 'DPPt',
+                name: 'Sinnoh Pokétch DS',
+                subtitle: 'Diamond • Pearl • Platinum',
+                bgOverride: '#111827',
+                panelSolid: '#1f2937',
+                borderOverride: '#60a5fa',
+                accentOverride: '#3b82f6',
+                textAccentOverride: '#93c5fd'
+            },
+            {
+                gen: 5,
+                code: 'BWB2',
+                name: 'Unova C-Gear',
+                subtitle: 'Black • White • Plasma',
+                bgOverride: '#09090b',
+                panelSolid: '#18181b',
+                borderOverride: '#a1a1aa',
+                accentOverride: '#0284c7',
+                textAccentOverride: '#38bdf8'
+            },
+            {
+                gen: 6,
+                code: 'ORAS',
+                name: 'PokéNav Plus DexNav',
+                subtitle: 'Omega Ruby • Alpha Sapphire',
+                bgOverride: '#081226',
+                panelSolid: '#102142',
+                borderOverride: '#e11d48',
+                accentOverride: '#e11d48',
+                textAccentOverride: '#38bdf8'
+            },
+            {
+                gen: 7,
+                code: 'SM',
+                name: 'Alola Rotom Dex',
+                subtitle: 'Sun • Moon • Ultra',
+                bgOverride: '#082032',
+                panelSolid: '#11324d',
+                borderOverride: '#f97316',
+                accentOverride: '#ea580c',
+                textAccentOverride: '#38bdf8'
+            },
+            {
+                gen: 8,
+                code: 'SwSh',
+                name: 'Galar League Rotom',
+                subtitle: 'Sword • Shield',
+                bgOverride: '#130b24',
+                panelSolid: '#21133d',
+                borderOverride: '#ec4899',
+                accentOverride: '#db2777',
+                textAccentOverride: '#00f5d4'
+            },
+            {
+                gen: 9,
+                code: 'SV',
+                name: 'Paldea Tera Orb OS',
+                subtitle: 'Scarlet • Violet',
+                bgOverride: '#180d2b',
+                panelSolid: '#271745',
+                borderOverride: '#f59e0b',
+                accentOverride: '#9333ea',
+                textAccentOverride: '#fde047'
+            }
+        ];
+
+        /* Theme & Type Definitions for the 3D Coin and Deck customization */
+        const TYPE_THEMES = [
+            {
+                id: 'Colorless',
+                label: 'Colorless',
+                coinGrad: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%)',
+                iconColor: '#1e293b',
+                bg: '#081226',
+                bgSec: '#102142',
+                panelSolid: '#13264c',
+                panel: 'rgba(19, 38, 76, 0.95)',
+                border: '#e11d48',
+                accent: '#e11d48',
+                accentHover: '#be123c',
+                glow: 'rgba(56, 189, 248, 0.45)',
+                textAccent: '#38bdf8',
+                gradient: 'radial-gradient(circle at 12% 15%, rgba(225, 29, 72, 0.24), transparent 52%), radial-gradient(circle at 88% 82%, rgba(2, 132, 199, 0.26), transparent 55%)'
+            },
+            {
+                id: 'Fire',
+                label: 'Fire',
+                coinGrad: 'linear-gradient(135deg, #fb923c 0%, #ef4444 55%, #991b1b 100%)',
+                iconColor: '#fff7ed',
+                bg: '#1c0a09',
+                bgSec: '#2d1210',
+                panelSolid: '#2d1210',
+                panel: 'rgba(45, 18, 16, 0.95)',
+                border: '#ef4444',
+                accent: '#ea580c',
+                accentHover: '#dc2626',
+                glow: 'rgba(239, 68, 68, 0.5)',
+                textAccent: '#fdba74',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(239, 68, 68, 0.25), transparent 55%), radial-gradient(circle at 85% 80%, rgba(249, 115, 22, 0.2), transparent 55%)'
+            },
+            {
+                id: 'Water',
+                label: 'Water',
+                coinGrad: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 55%, #1e3a8a 100%)',
+                iconColor: '#f0f9ff',
+                bg: '#071526',
+                bgSec: '#0c2540',
+                panelSolid: '#0c2540',
+                panel: 'rgba(12, 37, 64, 0.95)',
+                border: '#0284c7',
+                accent: '#0284c7',
+                accentHover: '#0369a1',
+                glow: 'rgba(56, 189, 248, 0.5)',
+                textAccent: '#7dd3fc',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.25), transparent 55%), radial-gradient(circle at 85% 80%, rgba(2, 132, 199, 0.2), transparent 55%)'
+            },
+            {
+                id: 'Grass',
+                label: 'Grass',
+                coinGrad: 'linear-gradient(135deg, #4ade80 0%, #16a34a 55%, #14532d 100%)',
+                iconColor: '#f0fdf4',
+                bg: '#071910',
+                bgSec: '#0f291c',
+                panelSolid: '#0f291c',
+                panel: 'rgba(15, 41, 28, 0.95)',
+                border: '#16a34a',
+                accent: '#16a34a',
+                accentHover: '#15803d',
+                glow: 'rgba(74, 222, 128, 0.45)',
+                textAccent: '#86efac',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(34, 197, 94, 0.22), transparent 55%), radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.16), transparent 55%)'
+            },
+            {
+                id: 'Lightning',
+                label: 'Lightning',
+                coinGrad: 'linear-gradient(135deg, #fde047 0%, #eab308 55%, #a16207 100%)',
+                iconColor: '#1e1b04',
+                bg: '#181405',
+                bgSec: '#292209',
+                panelSolid: '#292209',
+                panel: 'rgba(41, 34, 9, 0.95)',
+                border: '#eab308',
+                accent: '#ca8a04',
+                accentHover: '#a16207',
+                glow: 'rgba(250, 204, 21, 0.5)',
+                textAccent: '#fde047',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(250, 204, 21, 0.22), transparent 55%), radial-gradient(circle at 85% 80%, rgba(234, 179, 8, 0.16), transparent 55%)'
+            },
+            {
+                id: 'Psychic',
+                label: 'Psychic',
+                coinGrad: 'linear-gradient(135deg, #c084fc 0%, #9333ea 55%, #4c1d95 100%)',
+                iconColor: '#faf5ff',
+                bg: '#160b24',
+                bgSec: '#26143d',
+                panelSolid: '#26143d',
+                panel: 'rgba(38, 20, 61, 0.95)',
+                border: '#9333ea',
+                accent: '#9333ea',
+                accentHover: '#7e22ce',
+                glow: 'rgba(192, 132, 252, 0.5)',
+                textAccent: '#d8b4fe',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.24), transparent 55%), radial-gradient(circle at 85% 80%, rgba(217, 70, 239, 0.16), transparent 55%)'
+            },
+            {
+                id: 'Fighting',
+                label: 'Fighting',
+                coinGrad: 'linear-gradient(135deg, #fdba74 0%, #c2410c 55%, #7c2d12 100%)',
+                iconColor: '#fff7ed',
+                bg: '#1c1008',
+                bgSec: '#2e1b0f',
+                panelSolid: '#2e1b0f',
+                panel: 'rgba(46, 27, 15, 0.95)',
+                border: '#ea580c',
+                accent: '#c2410c',
+                accentHover: '#9a3412',
+                glow: 'rgba(249, 115, 22, 0.45)',
+                textAccent: '#fdba74',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(234, 88, 12, 0.22), transparent 55%), radial-gradient(circle at 85% 80%, rgba(180, 83, 9, 0.18), transparent 55%)'
+            },
+            {
+                id: 'Darkness',
+                label: 'Dark',
+                coinGrad: 'linear-gradient(135deg, #334155 0%, #0f172a 60%, #020617 100%)',
+                iconColor: '#2dd4bf',
+                bg: '#04080e',
+                bgSec: '#0b1320',
+                panelSolid: '#0b1320',
+                panel: 'rgba(11, 19, 32, 0.95)',
+                border: '#0d9488',
+                accent: '#0d9488',
+                accentHover: '#0f766e',
+                glow: 'rgba(45, 212, 191, 0.4)',
+                textAccent: '#5eead4',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(20, 184, 166, 0.18), transparent 55%), radial-gradient(circle at 85% 80%, rgba(15, 23, 42, 0.4), transparent 55%)'
+            },
+            {
+                id: 'Metal',
+                label: 'Steel',
+                coinGrad: 'linear-gradient(135deg, #f1f5f9 0%, #64748b 50%, #334155 100%)',
+                iconColor: '#0f172a',
+                bg: '#11161d',
+                bgSec: '#1e2631',
+                panelSolid: '#1e2631',
+                panel: 'rgba(30, 38, 49, 0.95)',
+                border: '#94a3b8',
+                accent: '#475569',
+                accentHover: '#334155',
+                glow: 'rgba(203, 213, 225, 0.45)',
+                textAccent: '#e2e8f0',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(203, 213, 225, 0.2), transparent 55%), radial-gradient(circle at 85% 80%, rgba(100, 116, 139, 0.2), transparent 55%)'
+            },
+            {
+                id: 'Fairy',
+                label: 'Fairy',
+                coinGrad: 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 55%, #9d174d 100%)',
+                iconColor: '#fdf2f8',
+                bg: '#1f0918',
+                bgSec: '#361029',
+                panelSolid: '#361029',
+                panel: 'rgba(54, 16, 41, 0.95)',
+                border: '#ec4899',
+                accent: '#db2777',
+                accentHover: '#be185d',
+                glow: 'rgba(244, 114, 182, 0.5)',
+                textAccent: '#f9a8d4',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(236, 72, 153, 0.22), transparent 55%), radial-gradient(circle at 85% 80%, rgba(244, 114, 182, 0.16), transparent 55%)'
+            },
+            {
+                id: 'Dragon',
+                label: 'Dragon',
+                coinGrad: 'linear-gradient(135deg, #fbbf24 0%, #b45309 45%, #4338ca 100%)',
+                iconColor: '#fef3c7',
+                bg: '#131122',
+                bgSec: '#221e3a',
+                panelSolid: '#221e3a',
+                panel: 'rgba(34, 30, 58, 0.95)',
+                border: '#f59e0b',
+                accent: '#d97706',
+                accentHover: '#b45309',
+                glow: 'rgba(251, 191, 36, 0.45)',
+                textAccent: '#fcd34d',
+                gradient: 'radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.2), transparent 55%), radial-gradient(circle at 85% 80%, rgba(99, 102, 241, 0.22), transparent 55%)'
+            }
+        ];
+
+        /* Authentic Elite Trainer Box (ETB) Sleeve Presets */
+        const ETB_SLEEVES = [
+            {
+                id: 'etb-evolutions-zard',
+                name: 'XY Evolutions (Mega Charizard)',
+                series: 'XY Evolutions ETB',
+                background: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 35%, #f59e0b 75%, #78350f 100%)',
+                border: '#fbbf24',
+                accent: '#fef3c7',
+                pattern: 'Flame Crest & Gold Foil Rim'
+            },
+            {
+                id: 'etb-evolutions-blastoise',
+                name: 'XY Evolutions (Mega Blastoise)',
+                series: 'XY Evolutions ETB',
+                background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 45%, #eab308 85%, #713f12 100%)',
+                border: '#fde047',
+                accent: '#dbeafe',
+                pattern: 'Hydro Cannon Royal & Gold Rim'
+            },
+            {
+                id: 'etb-hidden-fates',
+                name: 'Hidden Fates (Legendary Bird Trio)',
+                series: 'Hidden Fates ETB',
+                background: 'linear-gradient(135deg, #ef4444 0%, #eab308 33%, #38bdf8 66%, #1e1b4b 100%)',
+                border: '#fde047',
+                accent: '#ffffff',
+                pattern: 'Stained Glass Mosaic Foil'
+            },
+            {
+                id: 'etb-dragon-majesty',
+                name: 'Dragon Majesty (Naganadel Crest)',
+                series: 'Dragon Majesty ETB',
+                background: 'linear-gradient(135deg, #3b0764 0%, #6b21a8 45%, #ca8a04 90%, #facc15 100%)',
+                border: '#eab308',
+                accent: '#f3e8ff',
+                pattern: 'Draconic Sovereign Purple & Gold'
+            },
+            {
+                id: 'etb-ultra-prism',
+                name: 'Ultra Prism (Necrozma Prism)',
+                series: 'Ultra Prism ETB',
+                background: 'linear-gradient(135deg, #090d16 0%, #312e81 40%, #ec4899 75%, #f59e0b 100%)',
+                border: '#f472b6',
+                accent: '#e0e7ff',
+                pattern: 'Prismatic Geometric Shards'
+            },
+            {
+                id: 'etb-champions-path',
+                name: "Champion's Path (Gigantamax Charizard)",
+                series: "Champion's Path ETB",
+                background: 'linear-gradient(135deg, #09090b 0%, #18181b 50%, #ca8a04 90%, #fef08a 100%)',
+                border: '#facc15',
+                accent: '#fde047',
+                pattern: 'Obsidian Matte & Gold Filigree'
+            },
+            {
+                id: 'etb-crown-zenith',
+                name: 'Crown Zenith (Lucario VSTAR)',
+                series: 'Crown Zenith ETB',
+                background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 50%, #d97706 88%, #fef3c7 100%)',
+                border: '#fbbf24',
+                accent: '#93c5fd',
+                pattern: 'Aura Star Navy & Gold'
+            },
+            {
+                id: 'etb-151',
+                name: 'Scarlet & Violet 151 (Mew Silhouette)',
+                series: 'Pokémon 151 ETB',
+                background: 'linear-gradient(135deg, #831843 0%, #ec4899 45%, #a855f7 80%, #38bdf8 100%)',
+                border: '#f9a8d4',
+                accent: '#fdf2f8',
+                pattern: 'Kanto Confetti Holo'
+            }
+        ];
+
+        /* Custom SVG Type Emblem Renderer */
+        const TypeSymbol = ({ type, className = "w-7 h-7", color = "currentColor" }) => {
+            switch (type) {
+                case 'Fire':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M13.5 2C13.5 2 15.5 6 12.5 9C10.5 11 9.5 8.5 9.5 8.5C9.5 8.5 6 11.5 6 15.5C6 19.09 8.91 22 12.5 22C16.09 22 19 19.09 19 15.5C19 10.5 13.5 2 13.5 2ZM12.5 19.5C10.57 19.5 9 17.93 9 16C9 14.3 10.2 12.8 11.2 12.2C11.2 12.2 11 14 12.5 14.5C13.7 14.9 14.2 13.5 14.2 13.5C15.3 14.4 16 15.1 16 16C16 17.93 14.43 19.5 12.5 19.5Z"/>
+                        </svg>
+                    );
+                case 'Water':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M12 2.5C12 2.5 5.5 10.2 5.5 15C5.5 18.59 8.41 21.5 12 21.5C15.59 21.5 18.5 18.59 18.5 15C18.5 10.2 12 2.5 12 2.5ZM10 18.5C8.34 18.5 7.5 16.8 7.5 15C7.5 14.4 8 14.4 8.2 15C8.5 16 9.2 17.2 10.5 17.5C11.1 17.6 10.8 18.5 10 18.5Z"/>
+                        </svg>
+                    );
+                case 'Grass':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M19.5 4.5C12 4.5 5 9 5 16.5C5 18.2 5.7 19.7 6.8 20.8L15.5 12.1C15.9 11.7 16.5 11.7 16.9 12.1C17.3 12.5 17.3 13.1 16.9 13.5L8.2 22.2C9.3 22.7 10.6 23 12 23C18.5 23 20.5 14.5 19.5 4.5Z"/>
+                        </svg>
+                    );
+                case 'Lightning':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <polygon points="13 2 4 14 11 14 10 22 20 10 13 10 13 2"/>
+                        </svg>
+                    );
+                case 'Psychic':
+                    return (
+                        <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/>
+                            <circle cx="12" cy="12" r="3.2" fill={color}/>
+                        </svg>
+                    );
+                case 'Fighting':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M8 4C6.9 4 6 4.9 6 6V11H4.5C3.7 11 3 11.7 3 12.5V15C3 18.3 5.7 21 9 21H15C18.3 21 21 18.3 21 15V8C21 6.9 20.1 6 19 6H17V5C17 3.9 16.1 3 15 3H11C9.9 3 9 3.9 9 5V4H8Z"/>
+                        </svg>
+                    );
+                case 'Darkness':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z"/>
+                        </svg>
+                    );
+                case 'Metal':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <polygon points="12 2 21 7 21 17 12 22 3 17 3 7 12 2" fillOpacity="0.25" stroke={color} strokeWidth="2"/>
+                            <circle cx="12" cy="12" r="3.5"/>
+                            <line x1="12" y1="2" x2="12" y2="8.5" stroke={color} strokeWidth="2"/>
+                            <line x1="21" y1="17" x2="15" y2="13.5" stroke={color} strokeWidth="2"/>
+                            <line x1="3" y1="17" x2="9" y2="13.5" stroke={color} strokeWidth="2"/>
+                        </svg>
+                    );
+                case 'Fairy':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M12 3L14.5 8.5L20.5 9.5L16 14L17.5 20L12 17L6.5 20L8 14L3.5 9.5L9.5 8.5L12 3Z"/>
+                        </svg>
+                    );
+                case 'Dragon':
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <path d="M19 3C14 3 10 6 8 10L4 9L6 14C5 16 5 19 7 21C9 19 11 18 14 18C18 18 21 14 21 9C21 6 20 4 19 3ZM14 11C13.2 11 12.5 10.3 12.5 9.5C12.5 8.7 13.2 8 14 8C14.8 8 15.5 8.7 15.5 9.5C15.5 10.3 14.8 11 14 11Z"/>
+                        </svg>
+                    );
+                case 'Colorless':
+                default:
+                    return (
+                        <svg viewBox="0 0 24 24" fill={color} className={className}>
+                            <polygon points="12 2 14.4 9.2 22 9.2 15.8 13.7 18.2 21 12 16.5 5.8 21 8.2 13.7 2 9.2 9.6 9.2 12 2"/>
+                        </svg>
+                    );
+            }
         };
 
-        const DEFAULT_LIST = ``;
+        const Icons = {
+            Search: () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+            Pokeball: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="2.05" y1="12" x2="21.95" y2="12"></line><circle cx="12" cy="12" r="3"></circle></svg>,
+            Upload: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>,
+            Filter: () => <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>,
+            Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+            Deck: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="15" height="18" rx="2"></rect><path d="M22 7v13a2 2 0 0 1-2 2H7"></path></svg>,
+            Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Minus: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>,
+            Copy: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
+            ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
+            ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
+            Dollar: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        };
 
         const LimitlessParser = {
             getCardDetails: (setAbbrev, number) => {
-                // Map Limitless/PTCGO set codes to official Pokémon TCG API set codes
                 const setMap = {
                     'EVO': 'xy12', 'DRM': 'sm75', 'SUM': 'sm1', 'BKP': 'xy9', 'FLI': 'sm6',
                     'GRI': 'sm2', 'LOT': 'sm8', 'CES': 'sm7', 'FCO': 'xy10', 'PHF': 'xy4',
@@ -96,7 +870,6 @@
                 let setId = setMap[setAbbrev] || setAbbrev.toLowerCase();
                 let formattedNumber = number;
                 
-                // Promos require prefixing the number
                 if (setAbbrev === 'SMP') formattedNumber = `SM${number}`;
                 if (setAbbrev === 'XYP') formattedNumber = `XY${number}`;
                 if (setAbbrev === 'GEN-RC') { setId = 'g1'; formattedNumber = `rc${number}`; }
@@ -110,51 +883,119 @@
 
             parse: (text) => {
                 const lines = text.split('\n');
-                const cards = [];
-                let category = 'Pokémon'; // Default
+                const cardsMap = new Map();
+                let category = 'Pokémon';
                 let idCounter = 0;
                 
                 for (let line of lines) {
                     line = line.trim();
                     if (!line) continue;
                     
-                    // Detect category change
                     if (line.match(/^(Pokémon|Pokemon|Trainer|Energy):/i)) {
-                        category = line.split(':')[0].trim().replace('Pokemon', 'Pokémon');
+                        category = line.split(':')[0].trim().replace(/Pokemon/i, 'Pokémon');
                         continue;
                     }
                     
-                    // Parse Limitless format
                     const match = line.match(/^(\d+)\s+(.+?)\s+([A-Z0-9-]{2,6})\s+([0-9a-zA-Z]+)$/);
                     if (match) {
-                        const details = LimitlessParser.getCardDetails(match[3], match[4]);
-                        cards.push({
-                            id: `card-${idCounter++}`,
-                            count: parseInt(match[1], 10),
-                            name: match[2],
-                            set: match[3],
-                            number: match[4],
-                            category: category,
-                            officialSetId: details.setId,
-                            apiId: details.apiId,
-                            imageUrl: `https://images.pokemontcg.io/${details.setId}/${details.number}.png`,
-                            types: [], // Will be populated by auto-enricher
-                            subtypes: [], // Will be populated by auto-enricher
-                            rating: 0,
-                            enriched: false
-                        });
+                        const count = parseInt(match[1], 10);
+                        const name = match[2];
+                        const set = match[3];
+                        const number = match[4];
+                        const key = `${set}-${number}`;
+                        const details = LimitlessParser.getCardDetails(set, number);
+
+                        if (cardsMap.has(key)) {
+                            const existing = cardsMap.get(key);
+                            existing.count += count;
+                        } else {
+                            cardsMap.set(key, {
+                                id: `card-${set}-${number}-${idCounter++}`,
+                                key: key,
+                                count: count,
+                                name: name,
+                                set: set,
+                                number: number,
+                                category: category,
+                                officialSetId: details.setId,
+                                apiId: details.apiId,
+                                imageUrl: `https://images.pokemontcg.io/${details.setId}/${details.number}.png`,
+                                types: [],
+                                subtypes: [],
+                                prices: null,
+                                rating: 0,
+                                enriched: false
+                            });
+                        }
                     }
                 }
-                return cards;
+                return Array.from(cardsMap.values());
             }
         };
 
+        /* Helper to extract readable prices from PokemonTCG API data */
+        const extractPricing = (apiCard) => {
+            if (!apiCard) return null;
+            const variants = [];
+            let primaryPrice = null;
+            let source = 'TCGPlayer';
+            let updatedAt = apiCard.tcgplayer?.updatedAt || apiCard.cardmarket?.updatedAt || null;
+
+            if (apiCard.tcgplayer && apiCard.tcgplayer.prices) {
+                const p = apiCard.tcgplayer.prices;
+                const labelMap = {
+                    normal: 'Normal',
+                    holofoil: 'Holofoil',
+                    reverseHolofoil: 'Reverse Holo',
+                    '1stEditionHolofoil': '1st Ed. Holo',
+                    unlimitedHolofoil: 'Unlimited Holo'
+                };
+                Object.keys(p).forEach(k => {
+                    const entry = p[k];
+                    if (entry && (entry.market || entry.mid || entry.low)) {
+                        const val = entry.market || entry.mid || entry.low;
+                        if (primaryPrice === null) primaryPrice = val;
+                        variants.push({
+                            label: labelMap[k] || k,
+                            market: entry.market || null,
+                            low: entry.low || null,
+                            mid: entry.mid || null,
+                            high: entry.high || null
+                        });
+                    }
+                });
+            }
+
+            if (variants.length === 0 && apiCard.cardmarket && apiCard.cardmarket.prices) {
+                const cm = apiCard.cardmarket.prices;
+                source = 'Cardmarket';
+                const val = cm.averageSellPrice || cm.trendPrice || cm.lowPrice;
+                if (val) {
+                    primaryPrice = val;
+                    variants.push({
+                        label: 'Trend / Avg',
+                        market: cm.trendPrice || cm.averageSellPrice,
+                        low: cm.lowPrice || null,
+                        mid: cm.averageSellPrice || null,
+                        high: cm.reverseHoloTrend || null
+                    });
+                }
+            }
+
+            return {
+                primary: primaryPrice,
+                source,
+                updatedAt,
+                variants
+            };
+        };
+
         const LazyImage = ({ src, alt, className }) => {
-            const [status, setStatus] = useState('loading'); // loading, loaded, error
+            const [status, setStatus] = useState('loading');
             const fallbackImage = 'https://images.pokemontcg.io/cardback.png';
             
             return (
-                <div className={`relative ${className}`}>
+                <div className={`relative overflow-hidden ${className}`}>
                     {status === 'loading' && (
                         <div className="absolute inset-0 bg-slate-800 animate-pulse rounded-xl flex items-center justify-center">
                             <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
@@ -163,7 +1004,7 @@
                     <img 
                         src={status === 'error' ? fallbackImage : src} 
                         alt={alt}
-                        className={`w-full h-full object-cover transition-opacity duration-300 ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`}
+                        className={`w-full h-full object-contain transition-opacity duration-300 ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`}
                         onLoad={() => setStatus('loaded')}
                         onError={() => setStatus('error')}
                     />
@@ -171,53 +1012,402 @@
             );
         };
 
-        const CardModal = ({ card, onClose, onUpdateCard }) => {
-            if (!card) return null;
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-fade-in" onClick={onClose}>
-                    <div className="bg-slate-800 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row shadow-2xl relative" onClick={e => e.stopPropagation()}>
-                        
-                        <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-slate-900 hover:bg-slate-700 text-white p-3 rounded-full transition-colors border border-slate-600 shadow-lg">
-                            <Icons.X />
-                        </button>
+        const TypeCoinAndGenBox = ({ themeIndex, onFlipCoin, onSelectTheme, genNumber, onCycleGen, onSelectGen }) => {
+            const [flipDeg, setFlipDeg] = useState(0);
+            const [showQuickMenu, setShowQuickMenu] = useState(false);
+            const [showGenMenu, setShowGenMenu] = useState(false);
 
-                        <div className="w-full md:w-1/2 p-6 flex items-center justify-center bg-slate-900/50">
-                            <LazyImage src={card.imageUrl} alt={card.name} className="w-full max-w-sm" />
+            const currentTheme = TYPE_THEMES[themeIndex] || TYPE_THEMES[0];
+            const currentGen = GEN_THEMES.find(g => g.gen === genNumber) || GEN_THEMES[5]; // Default Gen 6
+
+            const handleCoinClick = () => {
+                setFlipDeg(prev => prev + 360);
+                onFlipCoin();
+            };
+
+            return (
+                <div className="relative flex items-center gap-2.5">
+                    {/* 3D Type Coin */}
+                    <div 
+                        className="coin-scene" 
+                        onClick={handleCoinClick}
+                        title={`Current Type Theme: ${currentTheme.label} (Click to flip coin!)`}
+                    >
+                        <div 
+                            className="coin-object"
+                            style={{ transform: `rotateY(${flipDeg}deg)` }}
+                        >
+                            <div 
+                                className="coin-face"
+                                style={{ background: currentTheme.coinGrad }}
+                            >
+                                <div className="coin-shine"></div>
+                                <TypeSymbol 
+                                    type={currentTheme.id} 
+                                    color={currentTheme.iconColor} 
+                                    className="w-6 h-6 drop-shadow" 
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Generation Number Box right next to the Type Coin */}
+                    <div className="flex items-center gap-1.5">
+                        <div
+                            onClick={onCycleGen}
+                            className="gen-box-btn"
+                            title={`Generation ${currentGen.gen}: ${currentGen.name} (${currentGen.subtitle}) — Click to cycle Generation!`}
+                        >
+                            <span className="text-[9px] font-black uppercase tracking-widest leading-none opacity-80" style={{ color: 'var(--theme-text-accent)' }}>
+                                GEN
+                            </span>
+                            <span className="text-lg font-black leading-tight text-white gen-title-font">
+                                {currentGen.gen}
+                            </span>
                         </div>
 
-                        <div className="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto no-scrollbar flex flex-col justify-center">
-                            <div className="mb-2 text-blue-400 font-bold uppercase tracking-widest text-sm">
-                                {card.category} Card
+                        {/* Metadata & Quick Pickers for Coin & Gen */}
+                        <div className="flex flex-col justify-center">
+                            <button 
+                                onClick={() => { setShowGenMenu(!showGenMenu); setShowQuickMenu(false); }}
+                                className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1 text-left hover:underline leading-tight"
+                                style={{ color: 'var(--theme-text-accent)' }}
+                                title="Choose Generation GUI Theme (1-9)"
+                            >
+                                <span>{currentGen.code}</span>
+                                <span className="text-[9px] opacity-80">▾</span>
+                            </button>
+                            <button 
+                                onClick={() => { setShowQuickMenu(!showQuickMenu); setShowGenMenu(false); }}
+                                className="text-xs font-extrabold flex items-center gap-1 text-left text-slate-200 hover:text-white leading-tight mt-0.5"
+                                title="Choose Elemental Type Theme"
+                            >
+                                <span>{currentTheme.label}</span>
+                                <span className="text-[9px] opacity-70">▾</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Type Coin Quick Picker Popover */}
+                    {showQuickMenu && (
+                        <div className="absolute top-14 left-0 z-50 oras-modal-panel p-2.5 w-48 grid grid-cols-2 gap-1.5 animate-fade-in">
+                            <div className="col-span-2 text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 pb-1 border-b border-slate-700">
+                                Select Type Coin
                             </div>
-                            <h2 className="text-4xl font-extrabold text-white mb-2">{card.name}</h2>
-                            
-                            <div className="flex gap-2 mb-6">
-                                {[1, 2, 3, 4, 5].map(star => (
+                            {TYPE_THEMES.map((t, idx) => (
+                                <button
+                                    key={t.id}
+                                    onClick={() => {
+                                        setFlipDeg(prev => prev + 360);
+                                        onSelectTheme(idx);
+                                        setShowQuickMenu(false);
+                                    }}
+                                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-bold transition ${idx === themeIndex ? 'theme-btn-primary' : 'text-slate-300 hover:bg-slate-700'}`}
+                                >
+                                    <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: t.coinGrad }}></span>
+                                    <span className="truncate">{t.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Generation 1-9 Quick Picker Popover */}
+                    {showGenMenu && (
+                        <div className="absolute top-14 left-10 z-50 oras-modal-panel p-3 w-64 flex flex-col gap-1.5 animate-fade-in">
+                            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 pb-1 border-b border-slate-700 flex justify-between">
+                                <span>Select Generation UI</span>
+                                <span style={{ color: 'var(--theme-text-accent)' }}>Gen {currentGen.gen}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-1.5 pt-1">
+                                {GEN_THEMES.map(g => (
                                     <button
-                                        key={star}
-                                        onClick={() => onUpdateCard && onUpdateCard({...card, rating: card.rating === star ? 0 : star})}
-                                        className={`transition-transform transform hover:scale-110 focus:outline-none`}
+                                        key={g.gen}
+                                        onClick={() => {
+                                            onSelectGen(g.gen);
+                                            setShowGenMenu(false);
+                                        }}
+                                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-center transition ${
+                                            g.gen === genNumber
+                                                ? 'theme-btn-primary border-white'
+                                                : 'oras-subpanel text-slate-300 hover:bg-slate-700'
+                                        }`}
                                     >
-                                        <Icons.Pokeball 
-                                            className={`w-8 h-8 ${star <= (card.rating || 0) ? 'text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-slate-600 hover:text-red-400/50'}`} 
-                                        />
+                                        <span className="text-sm font-black leading-none">{g.gen}</span>
+                                        <span className="text-[10px] font-bold opacity-85 mt-1">{g.code}</span>
                                     </button>
                                 ))}
                             </div>
-                            
-                            <div className="space-y-4 bg-slate-900 rounded-2xl p-6 border border-slate-700">
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                                    <span className="text-slate-400">Set Code</span>
-                                    <span className="font-bold text-white px-3 py-1 bg-slate-800 rounded-lg">{card.set}</span>
+                            <div className="text-[11px] text-center font-bold pt-1 text-slate-300">
+                                {currentGen.name}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const CardModal = ({ card, decks, activeDeckId, onClose, onUpdateCard, onMoveToDeck, onRemoveFromDeck }) => {
+            const [loadingPrice, setLoadingPrice] = useState(false);
+            const [targetDeckId, setTargetDeckId] = useState(activeDeckId || (decks[0]?.id || ''));
+            const [moveQty, setMoveQty] = useState(1);
+
+            useEffect(() => {
+                if (activeDeckId) setTargetDeckId(activeDeckId);
+                else if (decks.length > 0 && !targetDeckId) setTargetDeckId(decks[0].id);
+            }, [activeDeckId, decks]);
+
+            useEffect(() => {
+                setMoveQty(1);
+            }, [card?.id]);
+
+            // Fetch live pricing on demand when Full View opens if not already loaded
+            useEffect(() => {
+                let isMounted = true;
+                if (card && !card.prices && card.apiId) {
+                    setLoadingPrice(true);
+                    fetch(`https://api.pokemontcg.io/v2/cards/${card.apiId}`)
+                        .then(res => res.ok ? res.json() : null)
+                        .then(json => {
+                            if (isMounted && json && json.data) {
+                                const extracted = extractPricing(json.data);
+                                onUpdateCard({
+                                    ...card,
+                                    prices: extracted || { primary: null, variants: [] },
+                                    types: json.data.types || card.types,
+                                    subtypes: json.data.subtypes || card.subtypes,
+                                    hp: json.data.hp || card.hp,
+                                    attacks: json.data.attacks || card.attacks,
+                                    abilities: json.data.abilities || card.abilities,
+                                    rules: json.data.rules || card.rules,
+                                    enriched: true
+                                });
+                            }
+                        })
+                        .catch(() => {})
+                        .finally(() => {
+                            if (isMounted) setLoadingPrice(false);
+                        });
+                }
+                return () => { isMounted = false; };
+            }, [card?.id]);
+
+            if (!card) return null;
+
+            const cardKey = `${card.set}-${card.number}`;
+            const decksContainingCard = decks.map(d => {
+                const found = d.cards.find(c => `${c.set}-${c.number}` === cardKey);
+                return found ? { deck: d, count: found.count } : null;
+            }).filter(Boolean);
+
+            const totalInDecks = decksContainingCard.reduce((acc, item) => acc + item.count, 0);
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-md animate-fade-in" onClick={onClose}>
+                    <div 
+                        className="oras-modal-panel w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col md:flex-row relative" 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-slate-900 hover:bg-slate-700 text-white p-2.5 rounded-full transition-colors border border-slate-600 shadow-lg">
+                            <Icons.X />
+                        </button>
+
+                        {/* Left Card Artwork Preview */}
+                        <div className="w-full md:w-5/12 p-6 flex flex-col items-center justify-center oras-subpanel border-b md:border-b-0 md:border-r border-slate-700">
+                            <LazyImage src={card.imageUrl} alt={card.name} className="w-full max-w-xs card-aspect-ratio rounded-2xl shadow-2xl" />
+                            <div className="mt-3 text-xs text-slate-300 font-bold tracking-wide">
+                                Full View • {card.set} #{card.number}
+                            </div>
+                        </div>
+
+                        {/* Right Details, Price & Deck Transfer Controls */}
+                        <div className="w-full md:w-7/12 p-5 md:p-8 overflow-y-auto flex flex-col gap-5">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                        {card.category}
+                                    </span>
+                                    {card.subtypes && card.subtypes.map(st => (
+                                        <span key={st} className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                                            {st}
+                                        </span>
+                                    ))}
                                 </div>
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                                    <span className="text-slate-400">Card Number</span>
-                                    <span className="font-bold text-white px-3 py-1 bg-slate-800 rounded-lg">#{card.number}</span>
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1 gen-title-font">{card.name}</h2>
+
+                                {/* 5-Pokéball Rating */}
+                                <div className="flex items-center gap-2 mt-3">
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <button
+                                            key={star}
+                                            onClick={() => onUpdateCard && onUpdateCard({...card, rating: card.rating === star ? 0 : star})}
+                                            className="transition-transform transform hover:scale-110 focus:outline-none"
+                                            title={`Rate ${star} Pokéball(s) (Searchable via *${star}*)`}
+                                        >
+                                            <Icons.Pokeball 
+                                                className={`w-7 h-7 ${star <= (card.rating || 0) ? 'text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-slate-500 hover:text-red-400/50'}`} 
+                                            />
+                                        </button>
+                                    ))}
+                                    {card.rating > 0 && (
+                                        <button 
+                                            onClick={() => onUpdateCard({...card, rating: 0})}
+                                            className="text-xs text-slate-300 hover:text-white ml-2 underline"
+                                        >
+                                            Reset (*0*)
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-400">Quantity in Database</span>
-                                    <span className="font-bold text-emerald-400 text-xl px-3 py-1 bg-emerald-900/30 rounded-lg">{card.count}x</span>
+                            </div>
+
+                            {/* Live Market Price Section */}
+                            <div className="oras-subpanel p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                                        <Icons.Dollar /> Market Pricing {card.prices?.source ? `(${card.prices.source})` : ''}
+                                    </span>
+                                    {card.prices?.updatedAt && (
+                                        <span className="text-[11px] text-slate-400">Updated {card.prices.updatedAt}</span>
+                                    )}
                                 </div>
+                            </div>
+
+                            {/* Live Market Price Section */}
+                            <div className="bg-slate-900/90 rounded-2xl p-4 border border-slate-700">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                                        <Icons.Dollar /> Market Pricing {card.prices?.source ? `(${card.prices.source})` : ''}
+                                    </span>
+                                    {card.prices?.updatedAt && (
+                                        <span className="text-[11px] text-slate-500">Updated {card.prices.updatedAt}</span>
+                                    )}
+                                </div>
+
+                                {loadingPrice ? (
+                                    <div className="flex items-center gap-2 py-2 text-slate-400 text-sm">
+                                        <div className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin"></div>
+                                        <span>Fetching live market prices...</span>
+                                    </div>
+                                ) : card.prices && card.prices.variants && card.prices.variants.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
+                                        {card.prices.variants.map((v, i) => (
+                                            <div key={i} className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-3 flex justify-between items-center">
+                                                <div>
+                                                    <div className="text-xs font-bold text-slate-300">{v.label}</div>
+                                                    <div className="text-[11px] text-slate-400 mt-0.5">
+                                                        {v.low ? `Low: $${v.low.toFixed(2)}` : ''} {v.high ? `• High: $${v.high.toFixed(2)}` : ''}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-lg font-black text-emerald-400">
+                                                        ${(v.market || v.mid || v.low || 0).toFixed(2)}
+                                                    </span>
+                                                    <div className="text-[10px] uppercase text-slate-400">Market</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-slate-400 py-1">
+                                        No market price recorded for this printing ({card.set} #{card.number}).
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Database & Deck Inventory Status */}
+                            <div className="grid grid-cols-3 gap-3 oras-subpanel p-4 text-center">
+                                <div>
+                                    <div className="text-xs text-slate-400">Set & Number</div>
+                                    <div className="font-bold text-white mt-1">{card.set} #{card.number}</div>
+                                </div>
+                                <div className="border-x border-slate-700">
+                                    <div className="text-xs text-slate-400">Available in DB</div>
+                                    <div className={`font-black text-xl mt-0.5 ${card.count > 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                        {card.count}x
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-slate-400">Moved to Decks</div>
+                                    <div className="font-black text-xl text-blue-400 mt-0.5">{totalInDecks}x</div>
+                                </div>
+                            </div>
+
+                            {/* Move Between Database and Decks */}
+                            <div className="oras-subpanel p-4 flex flex-col gap-3">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                    <Icons.Deck /> Deck Assignment (Moves from Database)
+                                </div>
+
+                                {decks.length === 0 ? (
+                                    <p className="text-xs text-slate-400">
+                                        No decks created yet. Open the <strong>Deck Window</strong> on the right to create a deck!
+                                    </p>
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                        <select
+                                            value={targetDeckId}
+                                            onChange={e => setTargetDeckId(e.target.value)}
+                                            className="flex-grow bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-sm font-semibold text-white focus:outline-none"
+                                        >
+                                            {decks.map(d => (
+                                                <option key={d.id} value={d.id}>
+                                                    {d.name} ({d.cards.reduce((a, c) => a + c.count, 0)} cards)
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={Math.max(1, card.count)}
+                                                value={moveQty}
+                                                onChange={e => setMoveQty(Math.max(1, Math.min(card.count || 1, parseInt(e.target.value, 10) || 1)))}
+                                                disabled={card.count === 0}
+                                                className="w-16 bg-slate-800 border border-slate-600 rounded-xl px-2.5 py-2 text-center font-bold text-white"
+                                            />
+                                            <button
+                                                disabled={card.count <= 0 || !targetDeckId}
+                                                onClick={() => onMoveToDeck(card, targetDeckId, moveQty)}
+                                                className={`px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-1.5 ${card.count > 0 ? 'theme-btn-primary' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                                            >
+                                                <Icons.Plus /> Move to Deck
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Copies currently in decks */}
+                                {decksContainingCard.length > 0 && (
+                                    <div className="pt-2 border-t border-slate-800 space-y-2">
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                            Currently Assigned To:
+                                        </div>
+                                        {decksContainingCard.map(({ deck, count }) => (
+                                            <div key={deck.id} className="flex items-center justify-between bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-700">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-sm text-white">{deck.name}</span>
+                                                    <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full font-bold">{count}x in deck</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        onClick={() => onRemoveFromDeck(cardKey, deck.id, 1)}
+                                                        className="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-lg text-slate-200 transition"
+                                                        title="Return 1 copy to Database"
+                                                    >
+                                                        -1 to DB
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onRemoveFromDeck(cardKey, deck.id, count)}
+                                                        className="px-2.5 py-1 bg-red-900/50 hover:bg-red-800/70 text-xs font-bold rounded-lg text-red-200 transition"
+                                                        title="Return all copies to Database"
+                                                    >
+                                                        Return All
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -227,43 +1417,473 @@
 
         const ImportModal = ({ onClose, onImport }) => {
             const [text, setText] = useState('');
+            const [errorMsg, setErrorMsg] = useState('');
             
             const handleSave = () => {
                 const parsed = LimitlessParser.parse(text);
-                if(parsed.length > 0) {
+                if (parsed.length > 0) {
                     onImport(parsed);
                 } else {
-                    alert("No valid cards found. Ensure it matches the Limitless format.");
+                    setErrorMsg("No valid cards found. Ensure each line matches the Limitless format (e.g. '4 Pikachu EVO 35').");
                 }
             };
 
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-fade-in">
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl relative flex flex-col h-[80vh]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+                    <div className="oras-modal-panel w-full max-w-2xl overflow-hidden relative flex flex-col h-[80vh]">
                         <div className="p-6 border-b border-slate-700 flex justify-between items-center">
-                            <h3 className="text-2xl font-bold">Import Text List</h3>
+                            <h3 className="text-xl font-bold gen-title-font">Import Limitless Text List</h3>
                             <button onClick={onClose} className="text-slate-400 hover:text-white"><Icons.X /></button>
                         </div>
                         <div className="flex-grow p-6 flex flex-col">
-                            <p className="text-slate-400 mb-4 text-sm">Paste a Limitless TCG formatted decklist below to overwrite the database.</p>
+                            <p className="text-slate-300 mb-3 text-sm">Paste a Limitless TCG formatted list below to populate your database.</p>
+                            {errorMsg && (
+                                <div className="mb-3 p-3 rounded-xl bg-red-900 border border-red-700 text-red-200 text-xs font-semibold">
+                                    {errorMsg}
+                                </div>
+                            )}
                             <textarea 
                                 value={text}
-                                onChange={e => setText(e.target.value)}
-                                className="flex-grow bg-slate-900 border border-slate-700 rounded-xl p-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-sm resize-none"
-                                placeholder="4 Pikachu EVO 35&#10;2 Boss's Orders SHF 58&#10;..."
+                                onChange={e => { setText(e.target.value); setErrorMsg(''); }}
+                                className="flex-grow oras-subpanel p-4 text-white focus:outline-none font-mono text-sm resize-none"
+                                placeholder={"4 Pikachu EVO 35\n2 Tapu Lele-GX GRI 60\n4 Cynthia UPR 119"}
                             ></textarea>
                         </div>
-                        <div className="p-6 border-t border-slate-700 flex justify-end gap-4 bg-slate-800/80">
+                        <div className="p-6 border-t border-slate-700 flex justify-end gap-4">
                             <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-slate-300 hover:bg-slate-700 transition">Cancel</button>
-                            <button onClick={handleSave} className="px-6 py-3 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 text-white transition shadow-lg shadow-blue-900/50">Save & Import</button>
+                            <button onClick={handleSave} className="px-6 py-3 rounded-xl font-bold theme-btn-primary">Save & Import</button>
                         </div>
                     </div>
                 </div>
             );
         };
 
+        const DeckWindow = ({
+            isOpen,
+            onToggle,
+            decks,
+            activeDeckId,
+            onSelectDeck,
+            onCreateDeck,
+            onUpdateDeckMeta,
+            onDeleteDeck,
+            onMoveOneToDeck,
+            onRemoveFromDeck,
+            onOpenCardFullView
+        }) => {
+            const [isCreating, setIsCreating] = useState(false);
+            const [editingDeckId, setEditingDeckId] = useState(null);
+            const [nameInput, setNameInput] = useState('');
+            const [typeInput, setTypeInput] = useState('Colorless');
+            const [sleeveInput, setSleeveInput] = useState(ETB_SLEEVES[0].id);
+            const [copiedId, setCopiedId] = useState(null);
+
+            const activeDeck = decks.find(d => d.id === activeDeckId) || null;
+
+            const startCreate = () => {
+                setNameInput(`New Deck #${decks.length + 1}`);
+                setTypeInput('Colorless');
+                setSleeveInput(ETB_SLEEVES[0].id);
+                setEditingDeckId(null);
+                setIsCreating(true);
+            };
+
+            const startEdit = (deck) => {
+                setNameInput(deck.name);
+                setTypeInput(deck.type || 'Colorless');
+                setSleeveInput(deck.sleeveId || ETB_SLEEVES[0].id);
+                setEditingDeckId(deck.id);
+                setIsCreating(true);
+            };
+
+            const handleSaveDeckForm = () => {
+                if (!nameInput.trim()) return;
+                if (editingDeckId) {
+                    onUpdateDeckMeta(editingDeckId, {
+                        name: nameInput.trim(),
+                        type: typeInput,
+                        sleeveId: sleeveInput
+                    });
+                } else {
+                    onCreateDeck({
+                        name: nameInput.trim(),
+                        type: typeInput,
+                        sleeveId: sleeveInput
+                    });
+                }
+                setIsCreating(false);
+                setEditingDeckId(null);
+            };
+
+            const handleCopyDecklist = (deck) => {
+                const lines = deck.cards.map(c => `${c.count} ${c.name} ${c.set} ${c.number}`).join('\n');
+                const textArea = document.createElement('textarea');
+                textArea.value = lines;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                textArea.remove();
+                setCopiedId(deck.id);
+                setTimeout(() => setCopiedId(null), 2000);
+            };
+
+            return (
+                <>
+                    {/* Floating Tab on Right Edge when collapsed */}
+                    {!isOpen && (
+                        <button
+                            onClick={onToggle}
+                            style={{ backgroundColor: 'var(--theme-panel-solid)', borderColor: 'var(--theme-border)' }}
+                            className="fixed right-0 top-1/2 -translate-y-1/2 z-30 border-l-2 border-y-2 rounded-l-2xl py-4 px-2.5 shadow-2xl flex flex-col items-center gap-2 transition-all group"
+                            title="Open Deck Window"
+                        >
+                            <Icons.ChevronLeft />
+                            <Icons.Deck />
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-200" style={{ writingMode: 'vertical-rl' }}>
+                                Decks ({decks.length})
+                            </span>
+                        </button>
+                    )}
+
+                    {/* Mobile Dark Backdrop Overlay so Deck Window is never confusing or transparent on phones */}
+                    {isOpen && (
+                        <div 
+                            onClick={onToggle}
+                            style={{ backgroundColor: 'rgba(2, 6, 23, 0.78)' }}
+                            className="fixed inset-0 z-40 md:hidden animate-fade-in"
+                        />
+                    )}
+
+                    {/* Collapsible Opaque Sidebar Panel */}
+                    {isOpen && (
+                        <aside
+                            style={{
+                                width: 'min(92vw, 384px)',
+                                zIndex: 50
+                            }}
+                            className="fixed md:static top-0 right-0 h-full oras-deck-drawer flex flex-col flex-shrink-0 animate-fade-in"
+                        >
+                            {/* Deck Window Header */}
+                            <div className="p-4 border-b border-slate-700 flex items-center justify-between" style={{ backgroundColor: 'var(--theme-bg)' }}>
+                                <div className="flex items-center gap-2.5">
+                                    <Icons.Deck />
+                                    <div>
+                                        <h2 className="font-extrabold text-white text-sm sm:text-base leading-tight gen-title-font">Deck Window</h2>
+                                        <p className="text-[11px] text-slate-300">Cards added move off the main DB</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        onClick={startCreate}
+                                        className="px-3 py-1.5 rounded-xl text-xs font-bold theme-btn-primary flex items-center gap-1"
+                                    >
+                                        <Icons.Plus /> New Deck
+                                    </button>
+                                    <button
+                                        onClick={onToggle}
+                                        className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-600"
+                                        title="Close Deck Window"
+                                    >
+                                        <Icons.X />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Deck Creator / Editor Form */}
+                            {isCreating && (
+                                <div className="p-4 border-b border-slate-700 space-y-3 overflow-y-auto max-h-[65vh]" style={{ backgroundColor: 'var(--theme-bg-secondary)' }}>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--theme-text-accent)' }}>
+                                            {editingDeckId ? 'Edit Deck & Cosmetics' : 'Create New Deck'}
+                                        </span>
+                                        <button onClick={() => setIsCreating(false)} className="text-slate-300 hover:text-white">
+                                            <Icons.X />
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">Deck Name</label>
+                                        <input
+                                            type="text"
+                                            value={nameInput}
+                                            onChange={e => setNameInput(e.target.value)}
+                                            className="w-full px-3 py-2 rounded-xl oras-subpanel text-sm font-bold text-white"
+                                            placeholder="e.g. Expanded Charizard"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">Deck Elemental Type</label>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                                            {TYPE_THEMES.map(t => (
+                                                <button
+                                                    key={t.id}
+                                                    type="button"
+                                                    onClick={() => setTypeInput(t.id)}
+                                                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold border transition ${
+                                                        typeInput === t.id
+                                                            ? 'theme-btn-primary border-white'
+                                                            : 'oras-subpanel text-slate-300 hover:text-white'
+                                                    }`}
+                                                >
+                                                    <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: t.coinGrad }}>
+                                                        <TypeSymbol type={t.id} color={t.iconColor} className="w-2.5 h-2.5" />
+                                                    </span>
+                                                    <span className="truncate">{t.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">Elite Trainer Box (ETB) Sleeve</label>
+                                        <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                                            {ETB_SLEEVES.map(sleeve => (
+                                                <button
+                                                    key={sleeve.id}
+                                                    type="button"
+                                                    onClick={() => setSleeveInput(sleeve.id)}
+                                                    className={`w-full flex items-center gap-2.5 p-2 rounded-xl border text-left transition ${
+                                                        sleeveInput === sleeve.id
+                                                            ? 'border-white bg-slate-700 shadow-md'
+                                                            : 'oras-subpanel hover:bg-slate-800'
+                                                    }`}
+                                                >
+                                                    <div
+                                                        className="w-8 h-11 rounded-md flex-shrink-0 etb-sleeve-shimmer flex items-center justify-center shadow"
+                                                        style={{
+                                                            background: sleeve.background,
+                                                            border: `2px solid ${sleeve.border}`
+                                                        }}
+                                                    >
+                                                        <Icons.Pokeball className="w-4 h-4 text-white" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-grow">
+                                                        <div className="text-xs font-bold text-white truncate">{sleeve.name}</div>
+                                                        <div className="text-[10px] text-slate-300 truncate">{sleeve.pattern}</div>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-2 pt-2">
+                                        <button
+                                            onClick={() => setIsCreating(false)}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-700"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSaveDeckForm}
+                                            className="px-4 py-1.5 rounded-lg text-xs font-bold theme-btn-primary"
+                                        >
+                                            {editingDeckId ? 'Save Changes' : 'Create Deck'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Deck Selector List & Active Deck Contents */}
+                            <div className="flex-grow overflow-y-auto p-4 space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                {decks.length === 0 ? (
+                                    <div className="text-center py-12 px-4 text-slate-300 oras-subpanel">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto mb-3">
+                                            <Icons.Deck />
+                                        </div>
+                                        <p className="font-bold text-white text-sm">No Decks Created</p>
+                                        <p className="text-xs mt-1 text-slate-300">
+                                            Tap <strong>New Deck</strong> above to build a deck with custom ETB sleeves and move cards from your database.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Deck Boxes */}
+                                        <div className="space-y-2.5">
+                                            <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">
+                                                Your Decks ({decks.length})
+                                            </div>
+                                            {decks.map(deck => {
+                                                const sleeve = ETB_SLEEVES.find(s => s.id === deck.sleeveId) || ETB_SLEEVES[0];
+                                                const typeObj = TYPE_THEMES.find(t => t.id === deck.type) || TYPE_THEMES[0];
+                                                const totalCount = deck.cards.reduce((acc, c) => acc + c.count, 0);
+                                                const isSelected = deck.id === activeDeckId;
+
+                                                return (
+                                                    <div
+                                                        key={deck.id}
+                                                        onClick={() => onSelectDeck(deck.id)}
+                                                        className={`oras-subpanel p-3 transition cursor-pointer relative overflow-hidden ${
+                                                            isSelected ? 'ring-2 ring-white shadow-lg' : 'opacity-90 hover:opacity-100'
+                                                        }`}
+                                                    >
+                                                        {/* Decorative ETB Banner Accent */}
+                                                        <div
+                                                            className="absolute top-0 left-0 right-0 h-1.5 etb-sleeve-shimmer"
+                                                            style={{ background: sleeve.background }}
+                                                        ></div>
+
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            {/* Mini ETB Sleeve Visual */}
+                                                            <div
+                                                                className="w-10 h-14 rounded-lg flex-shrink-0 etb-sleeve-shimmer flex flex-col items-center justify-center shadow-md relative"
+                                                                style={{
+                                                                    background: sleeve.background,
+                                                                    border: `2px solid ${sleeve.border}`
+                                                                }}
+                                                                title={sleeve.name}
+                                                            >
+                                                                <TypeSymbol type={typeObj.id} color="#ffffff" className="w-5 h-5 drop-shadow" />
+                                                            </div>
+
+                                                            <div className="flex-grow min-w-0">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="font-extrabold text-white text-sm truncate">{deck.name}</span>
+                                                                    {isSelected && (
+                                                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold">
+                                                                            Active
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-[11px] text-slate-300 truncate mt-0.5">
+                                                                    {sleeve.series} • {typeObj.label}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-1.5">
+                                                                    <span className="text-xs font-extrabold text-white bg-slate-800 px-2 py-0.5 rounded-md border border-slate-600">
+                                                                        {totalCount} / 60 Cards
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
+                                                                <button
+                                                                    onClick={() => startEdit(deck)}
+                                                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600"
+                                                                    title="Customize Sleeve & Type"
+                                                                >
+                                                                    <Icons.Edit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleCopyDecklist(deck)}
+                                                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600"
+                                                                    title="Copy Limitless Decklist"
+                                                                >
+                                                                    <Icons.Copy />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => onDeleteDeck(deck.id)}
+                                                                    className="p-1.5 rounded-lg bg-red-900 hover:bg-red-700 text-red-100 border border-red-700"
+                                                                    title="Delete Deck (Returns cards to DB)"
+                                                                >
+                                                                    <Icons.Trash />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        {copiedId === deck.id && (
+                                                            <div className="mt-2 text-[11px] text-emerald-300 font-bold text-center bg-emerald-950 py-1 rounded-lg border border-emerald-700">
+                                                                Copied Limitless list to clipboard!
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Active Deck Card List */}
+                                        {activeDeck && (
+                                            <div className="pt-3 border-t border-slate-700 space-y-2.5">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-extrabold uppercase tracking-wider text-white">
+                                                        {activeDeck.name} Cards ({activeDeck.cards.reduce((a, c) => a + c.count, 0)})
+                                                    </span>
+                                                    <span className="text-[11px] text-slate-300">
+                                                        Tap + on cards to add
+                                                    </span>
+                                                </div>
+
+                                                {activeDeck.cards.length === 0 ? (
+                                                    <div className="p-4 oras-subpanel text-center text-xs text-slate-300">
+                                                        This deck is empty. Tap the <strong>+ Deck</strong> button on any card in Card View or Full View to move copies here!
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        {activeDeck.cards.map(c => {
+                                                            const sleeve = ETB_SLEEVES.find(s => s.id === activeDeck.sleeveId) || ETB_SLEEVES[0];
+                                                            const cardKey = `${c.set}-${c.number}`;
+                                                            return (
+                                                                <div
+                                                                    key={cardKey}
+                                                                    className="flex items-center gap-2.5 p-2 oras-subpanel hover:border-white transition"
+                                                                >
+                                                                    {/* Card Thumbnail wrapped in ETB Sleeve border */}
+                                                                    <div
+                                                                        onClick={() => onOpenCardFullView(c)}
+                                                                        className="w-10 h-14 rounded-md p-0.5 flex-shrink-0 cursor-pointer etb-sleeve-shimmer"
+                                                                        style={{
+                                                                            background: sleeve.background,
+                                                                            border: `1px solid ${sleeve.border}`
+                                                                        }}
+                                                                    >
+                                                                        <img
+                                                                            src={c.imageUrl}
+                                                                            alt={c.name}
+                                                                            className="w-full h-full object-cover rounded-sm"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div
+                                                                        onClick={() => onOpenCardFullView(c)}
+                                                                        className="flex-grow min-w-0 cursor-pointer"
+                                                                    >
+                                                                        <div className="text-xs font-bold text-white truncate">{c.name}</div>
+                                                                        <div className="text-[11px] text-slate-300">{c.set} #{c.number}</div>
+                                                                    </div>
+
+                                                                    {/* Quantity & Move Controls */}
+                                                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                                                        <button
+                                                                            onClick={() => onRemoveFromDeck(cardKey, activeDeck.id, 1)}
+                                                                            className="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white border border-slate-500"
+                                                                            title="Return 1 to Database"
+                                                                        >
+                                                                            <Icons.Minus />
+                                                                        </button>
+                                                                        <span className="w-6 text-center text-xs font-black text-white">
+                                                                            {c.count}x
+                                                                        </span>
+                                                                        <button
+                                                                            onClick={() => onMoveOneToDeck(c, activeDeck.id)}
+                                                                            className="w-7 h-7 rounded-lg theme-btn-primary flex items-center justify-center text-white"
+                                                                            title="Move 1 more from Database"
+                                                                        >
+                                                                            <Icons.Plus />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </aside>
+                    )}
+                </>
+            );
+        };
+
         const App = () => {
             const [dbCards, setDbCards] = useState([]);
+            const [decks, setDecks] = useState([]);
+            const [activeDeckId, setActiveDeckId] = useState(null);
+            const [isDeckWindowOpen, setIsDeckWindowOpen] = useState(false);
+            const [themeIndex, setThemeIndex] = useState(0); // Default 0 = Colorless (ORAS Ruby/Sapphire accent)
+            const [genNumber, setGenNumber] = useState(6);   // Default 6 = Omega Ruby / Alpha Sapphire
+            const [includeDeckCards, setIncludeDeckCards] = useState(false); // Slider to include or hide cards used in decks
+
             const [searchTerm, setSearchTerm] = useState('');
             const [categoryFilter, setCategoryFilter] = useState('All');
             const [typeFilter, setTypeFilter] = useState('All');
@@ -273,7 +1893,7 @@
             const [energyFilter, setEnergyFilter] = useState('All');
             
             const [isEnriching, setIsEnriching] = useState(false);
-            const [selectedCard, setSelectedCard] = useState(null);
+            const [selectedCardKey, setSelectedCardKey] = useState(null);
             const [showImport, setShowImport] = useState(false);
             const [showClearConfirm, setShowClearConfirm] = useState(false);
             
@@ -293,41 +1913,128 @@
             const SPECIAL_TYPES = ['EX', 'GX', 'BREAK', 'V', 'VMAX', 'VSTAR', 'Prism Star'];
             const TRAINER_TYPES = ['Item', 'Supporter', 'Tool', 'Stadium'];
 
-            // Initialize Database
+            // Apply CSS Variables & Generation Body Class whenever Type Coin or Generation Number changes
+            useEffect(() => {
+                const theme = TYPE_THEMES[themeIndex] || TYPE_THEMES[0];
+                const genObj = GEN_THEMES.find(g => g.gen === genNumber) || GEN_THEMES[5];
+                const root = document.documentElement;
+
+                // Blend Generation signature aesthetic with Type Coin selection
+                const isDefaultColorless = themeIndex === 0;
+                const activeBg = isDefaultColorless ? genObj.bgOverride : theme.bg;
+                const activePanelSolid = isDefaultColorless ? genObj.panelSolid : theme.panelSolid;
+                const activeBorder = isDefaultColorless ? genObj.borderOverride : theme.border;
+                const activeAccent = isDefaultColorless ? genObj.accentOverride : theme.accent;
+                const activeTextAccent = isDefaultColorless ? genObj.textAccentOverride : theme.textAccent;
+
+                root.style.setProperty('--theme-bg', activeBg);
+                root.style.setProperty('--theme-bg-secondary', theme.bgSec);
+                root.style.setProperty('--theme-panel-solid', activePanelSolid);
+                root.style.setProperty('--theme-panel', theme.panel);
+                root.style.setProperty('--theme-border', activeBorder);
+                root.style.setProperty('--theme-accent', activeAccent);
+                root.style.setProperty('--theme-accent-hover', theme.accentHover);
+                root.style.setProperty('--theme-glow', theme.glow);
+                root.style.setProperty('--theme-text-accent', activeTextAccent);
+                root.style.setProperty('--theme-gradient', theme.gradient);
+
+                // Apply gen-1 through gen-9 class on document.body
+                GEN_THEMES.forEach(g => document.body.classList.remove(`gen-${g.gen}`));
+                document.body.classList.add(`gen-${genNumber}`);
+            }, [themeIndex, genNumber]);
+
+            // Load Database, Decks, Theme Coin, and Generation Number from localStorage
             useEffect(() => {
                 const savedData = localStorage.getItem('pokeKioskDB');
+                const savedDecks = localStorage.getItem('pokeKioskDecks');
+                const savedTheme = localStorage.getItem('pokeKioskThemeIdx');
+                const savedGen = localStorage.getItem('pokeKioskGenNum');
+
+                if (savedTheme !== null) {
+                    const idx = parseInt(savedTheme, 10);
+                    if (!isNaN(idx) && idx >= 0 && idx < TYPE_THEMES.length) {
+                        setThemeIndex(idx);
+                    }
+                }
+
+                if (savedGen !== null) {
+                    const gNum = parseInt(savedGen, 10);
+                    if (!isNaN(gNum) && gNum >= 1 && gNum <= 9) {
+                        setGenNumber(gNum);
+                    }
+                }
+
+                if (savedDecks) {
+                    try {
+                        const parsedDecks = JSON.parse(savedDecks);
+                        if (Array.isArray(parsedDecks)) {
+                            setDecks(parsedDecks);
+                            if (parsedDecks.length > 0) setActiveDeckId(parsedDecks[0].id);
+                        }
+                    } catch (e) {}
+                }
+
                 if (savedData) {
                     try {
                         let parsed = JSON.parse(savedData);
-                        
-                        // One-time migration to repair databases broken by previous API rate limits
                         const version = localStorage.getItem('pokeKioskVersion');
-                        if (version !== '1.3') {
+                        if (version !== '1.4') {
                             parsed = parsed.map(c => ({ ...c, enriched: false }));
-                            localStorage.setItem('pokeKioskVersion', '1.3');
+                            localStorage.setItem('pokeKioskVersion', '1.4');
                         }
-                        
                         setDbCards(parsed);
                     } catch (e) {
                         setDbCards([]);
                     }
-                } else {
-                    setDbCards([]);
                 }
             }, []);
 
-            // Auto-Enrich Database with Types & Subtypes sequentially
+            const saveAllState = (newCards, newDecks) => {
+                if (newCards !== undefined) {
+                    setDbCards(newCards);
+                    localStorage.setItem('pokeKioskDB', JSON.stringify(newCards));
+                }
+                if (newDecks !== undefined) {
+                    setDecks(newDecks);
+                    localStorage.setItem('pokeKioskDecks', JSON.stringify(newDecks));
+                }
+            };
+
+            const handleFlipCoin = () => {
+                setThemeIndex(prev => {
+                    const next = (prev + 1) % TYPE_THEMES.length;
+                    localStorage.setItem('pokeKioskThemeIdx', String(next));
+                    return next;
+                });
+            };
+
+            const handleSelectTheme = (idx) => {
+                setThemeIndex(idx);
+                localStorage.setItem('pokeKioskThemeIdx', String(idx));
+            };
+
+            const handleCycleGen = () => {
+                setGenNumber(prev => {
+                    const next = prev >= 9 ? 1 : prev + 1;
+                    localStorage.setItem('pokeKioskGenNum', String(next));
+                    return next;
+                });
+            };
+
+            const handleSelectGen = (num) => {
+                setGenNumber(num);
+                localStorage.setItem('pokeKioskGenNum', String(num));
+            };
+
             useEffect(() => {
                 const enrichDatabase = async () => {
                     const missing = dbCards.filter(c => !c.enriched);
                     if (missing.length === 0 || isEnriching) return;
 
                     setIsEnriching(true);
-                    // Reduce batch size to 10 to prevent "Failed to fetch" connection drops
                     const batch = missing.slice(0, 10);
-                    
-                    // Safety check to ensure we only query valid IDs
                     const validBatch = batch.filter(c => c.apiId);
+
                     if (validBatch.length === 0) {
                         setDbCards(prev => prev.map(c => batch.some(b => b.id === c.id) ? { ...c, enriched: true } : c));
                         setIsEnriching(false);
@@ -338,11 +2045,9 @@
                     const encodedQuery = encodeURIComponent(`(${queryStr})`);
                     
                     try {
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&select=id,types,subtypes,supertype,hp,attacks,abilities,rules`);
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&select=id,types,subtypes,supertype,hp,attacks,abilities,rules,tcgplayer,cardmarket`);
                         
-                        // If rate limited or server overloaded, pause and retry the SAME batch instead of skipping
                         if (res.status === 429 || res.status >= 500) {
-                            console.warn(`API rate limited/server error (${res.status}). Retrying batch in 5s...`);
                             setIsEnriching(false);
                             setTimeout(() => setDbCards(prev => [...prev]), 5000);
                             return;
@@ -356,26 +2061,26 @@
                         
                         if (json.data) {
                             const enrichedMap = {};
-                            // Ensure ID mapping is fully case-insensitive
                             json.data.forEach(d => { enrichedMap[d.id.toLowerCase()] = d; });
                             
                             setDbCards(prev => {
                                 const updated = prev.map(c => {
                                     const lookupId = c.apiId ? c.apiId.toLowerCase() : '';
                                     if (enrichedMap[lookupId]) {
+                                        const apiCard = enrichedMap[lookupId];
                                         return {
                                             ...c,
-                                            types: enrichedMap[lookupId].types || [],
-                                            subtypes: enrichedMap[lookupId].subtypes || [],
-                                            category: enrichedMap[lookupId].supertype || c.category,
-                                            hp: enrichedMap[lookupId].hp || null,
-                                            attacks: enrichedMap[lookupId].attacks || [],
-                                            abilities: enrichedMap[lookupId].abilities || [],
-                                            rules: enrichedMap[lookupId].rules || [],
+                                            types: apiCard.types || [],
+                                            subtypes: apiCard.subtypes || [],
+                                            category: apiCard.supertype || c.category,
+                                            hp: apiCard.hp || null,
+                                            attacks: apiCard.attacks || [],
+                                            abilities: apiCard.abilities || [],
+                                            rules: apiCard.rules || [],
+                                            prices: extractPricing(apiCard),
                                             enriched: true
                                         };
                                     }
-                                    // If not found in API, mark as enriched to prevent infinite loops
                                     if (batch.some(b => b.id === c.id)) return { ...c, enriched: true };
                                     return c;
                                 });
@@ -384,28 +2089,128 @@
                             });
                         }
                     } catch (e) {
-                        console.error("Enrichment sequence failed for batch (Network Drop). Skipping to prevent freeze:", e.message);
-                        // Skip this batch if the API severs the connection so the rest of the database isn't blocked
-                        setDbCards(prev => {
-                            const updated = prev.map(c => {
-                                if (batch.some(b => b.id === c.id)) return { ...c, enriched: true };
-                                return c;
-                            });
-                            localStorage.setItem('pokeKioskDB', JSON.stringify(updated));
-                            return updated;
-                        });
+                        setIsEnriching(false);
+                        setTimeout(() => setDbCards(prev => [...prev]), 5000);
+                        return;
                     } finally {
                         setIsEnriching(false);
                     }
                 };
 
-                // Triggers sequence. Increased to 1200ms to prevent Cloudflare/CORS network drops.
                 const timeoutId = setTimeout(enrichDatabase, 1200); 
                 return () => clearTimeout(timeoutId);
             }, [dbCards, isEnriching]);
 
+            const handleCreateDeck = ({ name, type, sleeveId }) => {
+                const newDeck = {
+                    id: `deck-${Date.now()}`,
+                    name,
+                    type,
+                    sleeveId,
+                    cards: []
+                };
+                const nextDecks = [...decks, newDeck];
+                saveAllState(undefined, nextDecks);
+                setActiveDeckId(newDeck.id);
+                setIsDeckWindowOpen(true);
+            };
+
+            const handleUpdateDeckMeta = (deckId, updates) => {
+                const nextDecks = decks.map(d => d.id === deckId ? { ...d, ...updates } : d);
+                saveAllState(undefined, nextDecks);
+            };
+
+            const handleDeleteDeck = (deckId) => {
+                const deckToDelete = decks.find(d => d.id === deckId);
+                if (!deckToDelete) return;
+
+                // Return all cards in this deck back to the main database
+                const returnedMap = new Map();
+                deckToDelete.cards.forEach(c => {
+                    returnedMap.set(`${c.set}-${c.number}`, c);
+                });
+
+                const updatedDb = [...dbCards];
+                returnedMap.forEach((deckCard, key) => {
+                    const idx = updatedDb.findIndex(dbC => `${dbC.set}-${dbC.number}` === key);
+                    if (idx > -1) {
+                        updatedDb[idx] = { ...updatedDb[idx], count: updatedDb[idx].count + deckCard.count };
+                    } else {
+                        updatedDb.push({ ...deckCard });
+                    }
+                });
+
+                const remainingDecks = decks.filter(d => d.id !== deckId);
+                saveAllState(updatedDb, remainingDecks);
+                if (activeDeckId === deckId) {
+                    setActiveDeckId(remainingDecks[0]?.id || null);
+                }
+            };
+
+            // Move `qty` copies of `card` OFF the database and INTO `deckId`
+            const handleMoveToDeck = (card, deckId, qty = 1) => {
+                const targetId = deckId || activeDeckId;
+                if (!targetId) {
+                    setIsDeckWindowOpen(true);
+                    return;
+                }
+
+                const cardKey = `${card.set}-${card.number}`;
+                const dbIdx = dbCards.findIndex(c => `${c.set}-${c.number}` === cardKey);
+                if (dbIdx === -1 || dbCards[dbIdx].count <= 0) return;
+
+                const actualMove = Math.min(qty, dbCards[dbIdx].count);
+                if (actualMove <= 0) return;
+
+                const nextDb = dbCards.map((c, i) => i === dbIdx ? { ...c, count: c.count - actualMove } : c);
+
+                const nextDecks = decks.map(d => {
+                    if (d.id !== targetId) return d;
+                    const existingIdx = d.cards.findIndex(dc => `${dc.set}-${dc.number}` === cardKey);
+                    let nextDeckCards;
+                    if (existingIdx > -1) {
+                        nextDeckCards = d.cards.map((dc, i) => i === existingIdx ? { ...dc, count: dc.count + actualMove } : dc);
+                    } else {
+                        nextDeckCards = [...d.cards, { ...dbCards[dbIdx], count: actualMove }];
+                    }
+                    return { ...d, cards: nextDeckCards };
+                });
+
+                saveAllState(nextDb, nextDecks);
+            };
+
+            // Move `qty` copies OFF `deckId` and BACK INTO the database
+            const handleRemoveFromDeck = (cardKey, deckId, qty = 1) => {
+                const targetDeck = decks.find(d => d.id === deckId);
+                if (!targetDeck) return;
+                const deckCard = targetDeck.cards.find(c => `${c.set}-${c.number}` === cardKey);
+                if (!deckCard) return;
+
+                const actualReturn = Math.min(qty, deckCard.count);
+                if (actualReturn <= 0) return;
+
+                // Add back to database
+                const nextDb = [...dbCards];
+                const dbIdx = nextDb.findIndex(c => `${c.set}-${c.number}` === cardKey);
+                if (dbIdx > -1) {
+                    nextDb[dbIdx] = { ...nextDb[dbIdx], count: nextDb[dbIdx].count + actualReturn };
+                } else {
+                    nextDb.push({ ...deckCard, count: actualReturn });
+                }
+
+                // Subtract from deck
+                const nextDecks = decks.map(d => {
+                    if (d.id !== deckId) return d;
+                    const updatedCards = d.cards
+                        .map(c => `${c.set}-${c.number}` === cardKey ? { ...c, count: c.count - actualReturn } : c)
+                        .filter(c => c.count > 0);
+                    return { ...d, cards: updatedCards };
+                });
+
+                saveAllState(nextDb, nextDecks);
+            };
+
             const handleImport = (newCards) => {
-                // Intelligently merge new imported list with existing ratings and metadata
                 const existingMap = new Map(dbCards.map(c => [`${c.set}-${c.number}`, c]));
                 const mergedCards = newCards.map(nc => {
                     const ext = existingMap.get(`${nc.set}-${nc.number}`);
@@ -416,22 +2221,33 @@
                             enriched: ext.enriched, 
                             types: ext.types, 
                             subtypes: ext.subtypes, 
-                            category: ext.category 
+                            category: ext.category,
+                            hp: ext.hp,
+                            attacks: ext.attacks,
+                            abilities: ext.abilities,
+                            rules: ext.rules,
+                            prices: ext.prices || null
                         };
                     }
                     return nc;
                 });
 
-                setDbCards(mergedCards);
-                localStorage.setItem('pokeKioskDB', JSON.stringify(mergedCards));
+                saveAllState(mergedCards, undefined);
                 setShowImport(false);
             };
 
             const handleExportJSON = () => {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbCards));
+                const payload = {
+                    version: '1.5',
+                    dbCards,
+                    decks,
+                    themeIndex,
+                    genNumber
+                };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", "pokekiosk_backup.json");
+                downloadAnchorNode.setAttribute("download", "deckbuilder_pokedex_backup.json");
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
@@ -445,80 +2261,134 @@
                     try {
                         const json = JSON.parse(event.target.result);
                         if (Array.isArray(json)) {
-                            setDbCards(json);
-                            localStorage.setItem('pokeKioskDB', JSON.stringify(json));
-                        } else {
-                            console.error("Invalid backup file. Ensure it's a JSON array.");
+                            saveAllState(json, undefined);
+                        } else if (json && Array.isArray(json.dbCards)) {
+                            saveAllState(json.dbCards, json.decks || []);
+                            if (typeof json.themeIndex === 'number') handleSelectTheme(json.themeIndex);
+                            if (typeof json.genNumber === 'number') handleSelectGen(json.genNumber);
                         }
                     } catch (err) {
-                        console.error("Error parsing JSON.");
+                        console.error("Error parsing JSON backup.");
                     }
                 };
                 reader.readAsText(file);
             };
 
             const handleClearDatabase = () => {
-                setDbCards([]);
-                localStorage.removeItem('pokeKioskDB');
+                saveAllState([], []);
                 setShowClearConfirm(false);
             };
 
             const handleUpdateCard = (updatedCard) => {
+                const cardKey = `${updatedCard.set}-${updatedCard.number}`;
                 setDbCards(prev => {
-                    const newCards = prev.map(c => c.id === updatedCard.id ? updatedCard : c);
+                    const newCards = prev.map(c => `${c.set}-${c.number}` === cardKey ? updatedCard : c);
                     localStorage.setItem('pokeKioskDB', JSON.stringify(newCards));
                     return newCards;
                 });
-                if (selectedCard && selectedCard.id === updatedCard.id) {
-                    setSelectedCard(updatedCard);
-                }
             };
+
+            const selectedCard = useMemo(() => {
+                if (!selectedCardKey) return null;
+                return dbCards.find(c => `${c.set}-${c.number}` === selectedCardKey) || null;
+            }, [dbCards, selectedCardKey]);
 
             const uniqueSets = useMemo(() => {
                 const sets = {};
                 dbCards.forEach(c => {
-                    if(!sets[c.set]) sets[c.set] = c.officialSetId;
+                    if (!sets[c.set]) sets[c.set] = c.officialSetId;
                 });
                 return Object.keys(sets).map(k => ({ label: k, id: sets[k] })).sort((a,b) => a.label.localeCompare(b.label));
             }, [dbCards]);
 
+            // Map of how many copies of each card key are currently assigned across all decks
+            const deckCardCountsMap = useMemo(() => {
+                const map = {};
+                decks.forEach(d => {
+                    d.cards.forEach(c => {
+                        const k = `${c.set}-${c.number}`;
+                        map[k] = (map[k] || 0) + c.count;
+                    });
+                });
+                return map;
+            }, [decks]);
+
+            /* STREAMING_CHUNK:Implementing comma-separated multi-parameter search, *#* rating search, and deck-card slider filtering... */
             const filteredCards = useMemo(() => {
                 return dbCards.filter(card => {
-                    let matchesSearch = false;
-                    const term = searchTerm.toLowerCase();
-                    const isDeepSearch = term.startsWith('"') && term.endsWith('"') && term.length > 2;
-                    const cleanTerm = isDeepSearch ? term.slice(1, -1).trim() : term;
+                    const cardKey = `${card.set}-${card.number}`;
+                    const inDeckCount = deckCardCountsMap[cardKey] || 0;
 
-                    if (!searchTerm) {
-                        matchesSearch = true;
-                    } else if (isDeepSearch) {
-                        const inName = card.name.toLowerCase().includes(cleanTerm);
-                        const inHp = card.hp && card.hp.includes(cleanTerm);
-                        const inAttacks = card.attacks && card.attacks.some(a => (a.name && a.name.toLowerCase().includes(cleanTerm)) || (a.text && a.text.toLowerCase().includes(cleanTerm)));
-                        const inAbilities = card.abilities && card.abilities.some(a => (a.name && a.name.toLowerCase().includes(cleanTerm)) || (a.text && a.text.toLowerCase().includes(cleanTerm)));
-                        const inRules = card.rules && card.rules.some(r => r.toLowerCase().includes(cleanTerm));
-                        matchesSearch = inName || inHp || inAttacks || inAbilities || inRules;
-                    } else {
-                        matchesSearch = card.name.toLowerCase().includes(cleanTerm);
+                    // Slider logic:
+                    // When includeDeckCards is FALSE (Hide cards used in decks):
+                    // hide cards that have 0 remaining copies in DB (or are used in decks with no available copies)
+                    if (!includeDeckCards && card.count <= 0) return false;
+
+                    // Multi-parameter search with commas (e.g. Altaria, "80", *2*)
+                    let matchesSearch = true;
+                    if (searchTerm.trim()) {
+                        const clauses = searchTerm
+                            .split(',')
+                            .map(s => s.trim())
+                            .filter(Boolean);
+
+                        matchesSearch = clauses.every(clause => {
+                            const lowerClause = clause.toLowerCase();
+
+                            // 1. Check for Rating search in asterisks: e.g. *2*
+                            const exactStarMatch = lowerClause.match(/^\*([0-5])\*$/);
+                            if (exactStarMatch) {
+                                const targetRating = parseInt(exactStarMatch[1], 10);
+                                return (card.rating || 0) === targetRating;
+                            }
+
+                            // 2. Check if clause is a quoted Deep Search: e.g. "80" or "draw"
+                            const isDeepSearch = lowerClause.startsWith('"') && lowerClause.endsWith('"') && lowerClause.length > 2;
+                            if (isDeepSearch) {
+                                const cleanTerm = lowerClause.slice(1, -1).trim();
+                                if (!cleanTerm) return true;
+                                const inName = card.name.toLowerCase().includes(cleanTerm);
+                                const inHp = card.hp && String(card.hp).toLowerCase().includes(cleanTerm);
+                                const inAttacks = card.attacks && card.attacks.some(a =>
+                                    (a.name && a.name.toLowerCase().includes(cleanTerm)) ||
+                                    (a.text && a.text.toLowerCase().includes(cleanTerm)) ||
+                                    (a.damage && String(a.damage).toLowerCase().includes(cleanTerm))
+                                );
+                                const inAbilities = card.abilities && card.abilities.some(a =>
+                                    (a.name && a.name.toLowerCase().includes(cleanTerm)) ||
+                                    (a.text && a.text.toLowerCase().includes(cleanTerm))
+                                );
+                                const inRules = card.rules && card.rules.some(r => r.toLowerCase().includes(cleanTerm));
+                                const inSubtypes = card.subtypes && card.subtypes.some(s => s.toLowerCase().includes(cleanTerm));
+                                return Boolean(inName || inHp || inAttacks || inAbilities || inRules || inSubtypes);
+                            }
+
+                            // 3. Support inline *#* rating inside a single clause or standard name/set match
+                            const inlineStarMatch = lowerClause.match(/\*([0-5])\*/);
+                            let remainingText = lowerClause;
+                            if (inlineStarMatch) {
+                                const targetRating = parseInt(inlineStarMatch[1], 10);
+                                if ((card.rating || 0) !== targetRating) return false;
+                                remainingText = lowerClause.replace(/\*[0-5]\*/g, '').trim();
+                                if (!remainingText) return true;
+                            }
+
+                            return card.name.toLowerCase().includes(remainingText);
+                        });
                     }
 
                     const matchesCategory = categoryFilter === 'All' || (card.category && card.category.includes(categoryFilter));
                     
                     let matchesType = true;
                     if (categoryFilter === 'Pokémon' && typeFilter !== 'All') {
-                        // Safely check types using case-insensitive matching
                         matchesType = card.types && Array.isArray(card.types) && card.types.some(t => t.toLowerCase() === typeFilter.toLowerCase());
                     }
                     
                     let matchesSpecial = true;
                     if (categoryFilter === 'Pokémon' && specialFilter !== 'All') {
                         const hasSubtype = card.subtypes && card.subtypes.some(sub => sub.toUpperCase() === specialFilter.toUpperCase());
-                        
-                        // Use word boundary to strictly match "V" or "EX" without matching "Voltorb" or "Eevee"
-                        // Also handles hyphens like "Mewtwo-EX" or "Tapu Lele-GX"
                         const regex = new RegExp(`(^|[-\\s])${specialFilter}([-\\s]|$)`, 'i');
                         const hasInName = regex.test(card.name);
-                        
                         matchesSpecial = hasSubtype || hasInName;
                     }
                     
@@ -530,8 +2400,6 @@
                     let matchesEnergy = true;
                     if (categoryFilter === 'Energy' && energyFilter !== 'All') {
                         const basicEnergyNames = ['grass energy', 'fire energy', 'water energy', 'lightning energy', 'psychic energy', 'fighting energy', 'darkness energy', 'metal energy', 'fairy energy'];
-                        
-                        // Smart fallback: If it has the Special subtype, OR if its name isn't exactly a basic energy name
                         const isSpecial = (card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes('special'))) || 
                                           !basicEnergyNames.includes(card.name.toLowerCase().trim());
                         
@@ -546,10 +2414,11 @@
 
                     return matchesSearch && matchesCategory && matchesType && matchesSpecial && matchesTrainer && matchesEnergy && matchesSet;
                 });
-            }, [dbCards, searchTerm, categoryFilter, typeFilter, specialFilter, trainerFilter, energyFilter, setFilter]);
+            }, [dbCards, deckCardCountsMap, includeDeckCards, searchTerm, categoryFilter, typeFilter, specialFilter, trainerFilter, energyFilter, setFilter]);
 
-            const totalCards = dbCards.reduce((acc, card) => acc + card.count, 0);
-            const uniqueCards = dbCards.length;
+            const totalAvailableCards = dbCards.reduce((acc, card) => acc + card.count, 0);
+            const totalDeckCards = decks.reduce((acc, d) => acc + d.cards.reduce((s, c) => s + c.count, 0), 0);
+            const uniqueAvailableCards = dbCards.filter(c => c.count > 0).length;
             
             const enrichmentProgress = useMemo(() => {
                 if (dbCards.length === 0) return { percent: 100, isComplete: true };
@@ -561,116 +2430,182 @@
             }, [dbCards]);
 
             return (
-                <div className="flex flex-col h-full bg-slate-900 animate-fade-in">
+                <div className="flex flex-col h-full animate-fade-in">
                     
-                    {/* Header Controls */}
-                    <div className="flex-none bg-slate-800 border-b border-slate-700 z-10 shadow-lg">
-                        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div className="flex items-center gap-3">
-                                <img 
-                                    src="https://cdn.discordapp.com/attachments/1206757828950233178/1559379908914839674/crabulous_w_clippy.png?ex=6acedd36&is=6acd8bb6&hm=60d7747d6dedfa3f4f1abee4ae386e18548b33fdbd24281903de0a94da796919&" 
-                                    alt="Logo" 
-                                    className="w-12 h-12 object-contain drop-shadow-md hover:scale-105 transition-transform flex-shrink-0" 
-                                    style={{ width: '48px', height: '48px', minWidth: '48px', minHeight: '48px', flexShrink: 0 }}
-                                />
-                                <div>
-                                    <h1 className="text-xl font-bold text-white tracking-tight leading-tight">Deckbuilder Pokedex</h1>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <p className="text-xs text-slate-400">{totalCards} Total Cards • {uniqueCards} Unique</p>
-                                        {!enrichmentProgress.isComplete && (
-                                            <div className="flex items-center gap-1.5 bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-700/50 animate-pulse">
-                                                <div className="w-2.5 h-2.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
-                                                <span className="text-[10px] text-blue-300 font-semibold tracking-wide">Syncing Metadata... {enrichmentProgress.percent}%</span>
-                                            </div>
-                                        )}
+                    {/* Top Header & Filter Controls (ORAS PokéNav Plus / DexNav Styled) */}
+                    <div className="flex-none theme-header z-20">
+                        <div className="oras-top-strip"></div>
+                        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-col lg:flex-row justify-between items-center gap-3">
+                            {/* Left Brand + 3D Type Coin + Generation Box */}
+                            <div className="flex items-center justify-between w-full lg:w-auto gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <img 
+                                        src={LOGO_URL} 
+                                        alt="Logo" 
+                                        className="w-11 h-11 object-contain drop-shadow-md hover:scale-105 transition-transform flex-shrink-0" 
+                                        style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', flexShrink: 0 }}
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <h1 className="text-base sm:text-xl font-extrabold text-white tracking-tight leading-tight truncate gen-title-font">
+                                                Deckbuilder Pokedex
+                                            </h1>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                            <p className="text-[11px] sm:text-xs text-slate-300 font-medium">
+                                                <span className="font-bold text-emerald-400">{totalAvailableCards}</span> in DB • <span className="font-bold" style={{ color: 'var(--theme-text-accent)' }}>{totalDeckCards}</span> in Decks • {uniqueAvailableCards} Unique
+                                            </p>
+                                            {!enrichmentProgress.isComplete && (
+                                                <div className="flex items-center gap-1.5 bg-blue-900/60 px-2 py-0.5 rounded-full border border-blue-500 animate-pulse">
+                                                    <div className="w-2.5 h-2.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
+                                                    <span className="text-[10px] text-blue-200 font-semibold tracking-wide">Sync {enrichmentProgress.percent}%</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
+
+                                {/* 3D Type Coin + Generation Number Box */}
+                                <TypeCoinAndGenBox 
+                                    themeIndex={themeIndex} 
+                                    onFlipCoin={handleFlipCoin} 
+                                    onSelectTheme={handleSelectTheme}
+                                    genNumber={genNumber}
+                                    onCycleGen={handleCycleGen}
+                                    onSelectGen={handleSelectGen}
+                                />
                             </div>
                             
-                            <div className="flex items-center gap-3 w-full md:w-auto">
-                                <button onClick={handleExportJSON} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors border border-slate-600">
+                            {/* Right Action Buttons */}
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto justify-end">
+                                <button onClick={handleExportJSON} className="px-2.5 py-1.5 oras-subpanel hover:bg-slate-700 text-xs font-bold transition-colors text-slate-200">
                                     Export JSON
                                 </button>
-                                <label className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors cursor-pointer border border-slate-600">
+                                <label className="px-2.5 py-1.5 oras-subpanel hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer text-slate-200">
                                     Load JSON
-                                    <input type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
+                                    <input type="file" accept=".json" className="hidden" style={{ display: 'none' }} onChange={handleImportJSON} />
                                 </label>
-                                <button onClick={() => setShowClearConfirm(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-900/60 hover:bg-red-800 rounded-lg text-sm font-semibold text-red-100 transition-colors border border-red-700/50">
+                                <button onClick={() => setShowClearConfirm(true)} className="flex items-center gap-1 px-2.5 py-1.5 bg-red-900 hover:bg-red-800 rounded-lg text-xs font-bold text-red-100 transition-colors border border-red-700">
                                     <Icons.Trash /> Clear DB
                                 </button>
-                                <button onClick={() => setShowImport(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-blue-900/50">
+                                <button onClick={() => setShowImport(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold theme-btn-primary">
                                     <Icons.Upload /> Import Text
+                                </button>
+                                <button 
+                                    onClick={() => setIsDeckWindowOpen(!isDeckWindowOpen)} 
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold border transition-all ${
+                                        isDeckWindowOpen 
+                                            ? 'bg-white text-slate-900 border-white shadow-lg' 
+                                            : 'oras-subpanel text-white hover:bg-slate-700'
+                                    }`}
+                                >
+                                    <Icons.Deck />
+                                    <span>Decks ({decks.length})</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Search & Filter Bar */}
-                        <div className="max-w-7xl mx-auto px-6 pb-6 flex flex-col gap-4">
-                            <div className="flex flex-col md:flex-row gap-4">
+                        {/* Search, Multi-Parameter Input & Deck Card Slider Bar */}
+                        <div className="max-w-7xl mx-auto px-3 sm:px-6 pb-3.5 flex flex-col gap-2.5">
+                            <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center">
                                 <div className="relative flex-grow">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                         <Icons.Search />
                                     </div>
                                     <input
                                         type="text"
-                                        className="block w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
-                                        placeholder='Search name, or use "quotes" for attacks & abilities...'
+                                        className="block w-full pl-11 pr-10 py-2.5 oras-subpanel text-white placeholder-slate-400 focus:outline-none text-sm"
+                                        placeholder='DexNav Search: e.g. Altaria, "80", *3* (use commas, "quotes", or *1*-*5*)'
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                     {searchTerm && (
-                                        <button onClick={() => setSearchTerm('')} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white">
+                                        <button onClick={() => setSearchTerm('')} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
                                             <Icons.X />
                                         </button>
                                     )}
                                 </div>
 
-                                <div className="flex bg-slate-900 border border-slate-700 rounded-xl p-1 overflow-x-auto no-scrollbar">
-                                    {['All', 'Pokémon', 'Trainer', 'Energy'].map(cat => (
-                                        <button 
-                                            key={cat}
-                                            onClick={() => {
-                                                setCategoryFilter(cat);
-                                                setTypeFilter('All');
-                                                setTrainerFilter('All');
-                                                setEnergyFilter('All');
+                                <div className="flex items-center justify-between md:justify-end gap-2.5 overflow-x-auto no-scrollbar">
+                                    {/* Category Tabs */}
+                                    <div className="flex oras-subpanel p-1">
+                                        {['All', 'Pokémon', 'Trainer', 'Energy'].map(cat => (
+                                            <button 
+                                                key={cat}
+                                                onClick={() => {
+                                                    setCategoryFilter(cat);
+                                                    setTypeFilter('All');
+                                                    setTrainerFilter('All');
+                                                    setEnergyFilter('All');
+                                                }}
+                                                className={`px-3 sm:px-3.5 py-1.5 rounded-md font-bold text-xs whitespace-nowrap transition-all ${categoryFilter === cat ? 'theme-btn-primary' : 'text-slate-300 hover:text-white'}`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Slider to Include or Hide Cards Used in Decks */}
+                                    <div 
+                                        onClick={() => setIncludeDeckCards(!includeDeckCards)}
+                                        className="flex items-center gap-2 px-3 py-1.5 oras-subpanel cursor-pointer select-none flex-shrink-0"
+                                        title="Toggle slider to include or hide cards that have been moved into decks"
+                                    >
+                                        <div 
+                                            className="oras-slider-track"
+                                            style={{
+                                                backgroundColor: includeDeckCards ? 'var(--theme-accent)' : '#1e293b',
+                                                borderColor: includeDeckCards ? 'var(--theme-text-accent)' : '#475569'
                                             }}
-                                            className={`px-5 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${categoryFilter === cat ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
                                         >
-                                            {cat}
-                                        </button>
-                                    ))}
+                                            <div 
+                                                className="oras-slider-thumb"
+                                                style={{
+                                                    transform: includeDeckCards ? 'translateX(20px)' : 'translateX(2px)'
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col text-left leading-tight">
+                                            <span className="text-[11px] font-extrabold text-white whitespace-nowrap">
+                                                Include Deck Cards
+                                            </span>
+                                            <span className="text-[10px] text-slate-300 whitespace-nowrap">
+                                                {includeDeckCards ? `Showing (${totalDeckCards} in decks)` : 'Hiding depleted'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Conditional Sub-Filters */}
                             {categoryFilter === 'Pokémon' && (
                                 <div className="flex flex-col gap-2 animate-slide-up">
-                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Type:</span>
+                                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex-shrink-0">Type:</span>
                                         <button 
                                             onClick={() => setTypeFilter('All')} 
-                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${typeFilter === 'All' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                            className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${typeFilter === 'All' ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                         >All</button>
                                         {POKEMON_TYPES.map(pt => (
                                             <button 
                                                 key={pt.value}
                                                 onClick={() => setTypeFilter(pt.value)}
-                                                className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${typeFilter === pt.value ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                                className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${typeFilter === pt.value ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                             >{pt.label}</button>
                                         ))}
                                     </div>
-                                    <div className="flex items-center gap-2 overflow-x-auto pb-3">
-                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Special:</span>
+                                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex-shrink-0">Special:</span>
                                         <button 
                                             onClick={() => setSpecialFilter('All')} 
-                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${specialFilter === 'All' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                            className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${specialFilter === 'All' ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                         >All</button>
                                         {SPECIAL_TYPES.map(st => (
                                             <button 
                                                 key={st}
                                                 onClick={() => setSpecialFilter(st)}
-                                                className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${specialFilter === st ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                                className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${specialFilter === st ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                             >{st}</button>
                                         ))}
                                     </div>
@@ -678,104 +2613,60 @@
                             )}
 
                             {categoryFilter === 'Trainer' && (
-                                <div className="flex items-center gap-2 overflow-x-auto pb-3 animate-slide-up">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Class:</span>
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 animate-slide-up">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex-shrink-0">Class:</span>
                                     <button 
                                         onClick={() => setTrainerFilter('All')} 
-                                        className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${trainerFilter === 'All' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                        className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${trainerFilter === 'All' ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                     >All</button>
                                     {TRAINER_TYPES.map(tt => (
                                         <button 
                                             key={tt}
                                             onClick={() => setTrainerFilter(tt)}
-                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${trainerFilter === tt ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                            className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${trainerFilter === tt ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                         >{tt}</button>
                                     ))}
                                 </div>
                             )}
 
                             {categoryFilter === 'Energy' && (
-                                <div className="flex items-center gap-2 overflow-x-auto pb-3 animate-slide-up">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Type:</span>
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 animate-slide-up">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex-shrink-0">Type:</span>
                                     {['All', 'Basic', 'Special'].map(et => (
                                         <button 
                                             key={et}
                                             onClick={() => setEnergyFilter(et)}
-                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${energyFilter === et ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                            className={`px-3 py-1 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${energyFilter === et ? 'theme-pill-active' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                                         >{et}</button>
                                     ))}
                                 </div>
                             )}
 
                             {/* Set Icon Filters */}
-                            <div className="flex items-center gap-2 overflow-x-auto pb-4 pt-2 border-t border-slate-700/50">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Set:</span>
-                                <button 
-                                    onClick={() => setSetFilter('All')} 
-                                    className={`px-4 py-1.5 flex-shrink-0 rounded-lg text-xs font-bold border transition-all ${setFilter === 'All' ? 'bg-slate-700 border-slate-500 text-white shadow' : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'}`}
-                                >
-                                    All Sets
-                                </button>
-                                {uniqueSets.map(s => (
+                            {uniqueSets.length > 0 && (
+                                <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-2 border-t border-slate-700/50">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex-shrink-0">Set:</span>
                                     <button 
-                                        key={s.label}
-                                        onClick={() => setSetFilter(s.label)}
-                                        className={`flex items-center flex-shrink-0 gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${setFilter === s.label ? 'bg-slate-700 border-slate-400 text-white shadow-md' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
-                                        title={s.label}
+                                        onClick={() => setSetFilter('All')} 
+                                        className={`px-3.5 py-1 flex-shrink-0 rounded-lg text-xs font-bold border transition-all ${setFilter === 'All' ? 'theme-pill-active' : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'}`}
                                     >
-                                        <img src={`https://images.pokemontcg.io/${s.id}/symbol.png`} alt={s.label} className="h-4 w-auto flex-shrink-0 object-contain filter invert opacity-90" onError={(e) => { e.target.style.display = 'none'; }} />
-                                        <span>{s.label}</span>
+                                        All Sets
                                     </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Results Grid */}
-                    <div className="flex-grow overflow-y-auto p-6">
-                        <div className="max-w-7xl mx-auto h-full">
-                            {filteredCards.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4">
-                                    <Icons.Filter />
-                                    <p className="text-xl font-semibold">
-                                        {dbCards.length === 0 ? "No cards in database. Click 'Import Text' to start." : "No cards match your search."}
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 pb-12 animate-slide-up">
-                                    {filteredCards.map(card => (
+                                    {uniqueSets.map(s => (
                                         <button 
-                                            key={card.id} 
-                                            onClick={() => setSelectedCard(card)}
-                                            className="card-hover relative bg-slate-800 rounded-xl p-2 border border-slate-700 flex flex-col focus:outline-none text-left h-full"
+                                            key={s.label}
+                                            onClick={() => setSetFilter(s.label)}
+                                            className={`flex items-center flex-shrink-0 gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-all ${setFilter === s.label ? 'theme-pill-active' : 'bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
+                                            title={s.label}
                                         >
-                                            {/* Quantity Badge */}
-                                            <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-blue-600 text-white text-xs font-black px-2 py-1 rounded-full shadow-lg z-10 border-2 border-slate-900">
-                                                {card.count}x
-                                            </div>
-                                            
-                                            <LazyImage src={card.imageUrl} alt={card.name} className="w-full aspect-[63/88] rounded-lg bg-slate-900" />
-                                            
-                                            <div className="mt-3 px-1 flex-grow flex flex-col justify-end">
-                                                <p className="text-white font-bold text-sm leading-tight line-clamp-2">{card.name}</p>
-                                                <div className="flex justify-between items-center mt-1">
-                                                    <div className="flex flex-col">
-                                                        <p className="text-slate-400 text-xs">{card.set} {card.number}</p>
-                                                        <div className="flex gap-0.5 mt-1">
-                                                            {Array.from({length: 5}).map((_, i) => {
-                                                                const star = i + 1;
-                                                                return (
-                                                                    <Icons.Pokeball 
-                                                                        key={i} 
-                                                                        className={`w-3.5 h-3.5 ${star <= (card.rating || 0) ? 'text-red-500 fill-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)]' : 'text-slate-600'}`} 
-                                                                    />
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">{card.category.substring(0,3)}</span>
-                                                </div>
-                                            </div>
+                                            <img 
+                                                src={`https://images.pokemontcg.io/${s.id}/symbol.png`} 
+                                                alt={s.label} 
+                                                className="h-4 w-4 flex-shrink-0 object-contain filter invert opacity-90" 
+                                                style={{ width: '16px', height: '16px' }}
+                                                onError={(e) => { e.target.style.display = 'none'; }} 
+                                            />
+                                            <span>{s.label}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -783,31 +2674,159 @@
                         </div>
                     </div>
 
-                    {/* Modals */}
-                    {selectedCard && <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} onUpdateCard={handleUpdateCard} />}
-                {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={handleImport} />}
-                
-                {showClearConfirm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-fade-in">
-                        <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl relative flex flex-col">
-                            <div className="p-6 border-b border-slate-700">
-                                <h3 className="text-xl font-bold text-red-400 flex items-center gap-2"><Icons.Trash /> Clear Database</h3>
-                            </div>
-                            <div className="p-6">
-                                <p className="text-slate-300">Are you sure you want to delete all cards from your local database? This cannot be undone unless you have a JSON backup.</p>
-                            </div>
-                            <div className="p-4 border-t border-slate-700 flex justify-end gap-3 bg-slate-800/80">
-                                <button onClick={() => setShowClearConfirm(false)} className="px-4 py-2 rounded-lg font-bold text-slate-300 hover:bg-slate-700 transition">Cancel</button>
-                                <button onClick={handleClearDatabase} className="px-4 py-2 rounded-lg font-bold bg-red-600 hover:bg-red-500 text-white transition shadow-lg shadow-red-900/50">Yes, Clear</button>
+                    {/* Main Body Workspace: Card View (Left/Center) + Collapsible Deck Window (Right) */}
+                    <div className="flex-grow flex overflow-hidden relative">
+                        
+                        {/* Card View (Main Grid) */}
+                        <div className="flex-grow overflow-y-auto p-3 sm:p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            <div className="max-w-7xl mx-auto h-full">
+                                {filteredCards.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4 py-16">
+                                        <Icons.Filter />
+                                        <p className="text-base sm:text-lg font-semibold text-center">
+                                            {dbCards.length === 0 
+                                                ? "No cards in database. Tap 'Import Text' to start." 
+                                                : "No cards in Card View match your current DexNav filters."}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="cards-grid-layout pb-16 animate-slide-up">
+                                        {filteredCards.map(card => {
+                                            const cardKey = `${card.set}-${card.number}`;
+                                            const inDeckCount = deckCardCountsMap[cardKey] || 0;
+                                            return (
+                                                <div 
+                                                    key={card.id} 
+                                                    onClick={() => setSelectedCardKey(cardKey)}
+                                                    className={`theme-card relative p-2.5 flex flex-col cursor-pointer text-left h-full ${card.count <= 0 ? 'opacity-65' : ''}`}
+                                                >
+                                                    {/* Available Quantity Badge & In-Deck Indicator */}
+                                                    <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+                                                        <div 
+                                                            className="text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-lg border border-white/40"
+                                                            style={{ backgroundColor: card.count > 0 ? 'var(--theme-accent)' : '#d97706' }}
+                                                        >
+                                                            {card.count}x
+                                                        </div>
+                                                        {inDeckCount > 0 && (
+                                                            <div className="bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow border border-blue-300">
+                                                                {inDeckCount} in Deck
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Quick Move to Active Deck Button */}
+                                                    {card.count > 0 && decks.length > 0 && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleMoveToDeck(card, activeDeckId || decks[0].id, 1);
+                                                            }}
+                                                            className="absolute top-2 left-2 z-10 bg-slate-900 hover:bg-emerald-600 text-white text-[11px] font-extrabold px-2 py-1 rounded-lg border border-slate-500 shadow-md flex items-center gap-1 transition-colors"
+                                                            title={`Move 1 copy from DB to ${decks.find(d => d.id === (activeDeckId || decks[0]?.id))?.name || 'Deck'}`}
+                                                        >
+                                                            <Icons.Plus /> Deck
+                                                        </button>
+                                                    )}
+                                                    
+                                                    <LazyImage src={card.imageUrl} alt={card.name} className="w-full card-aspect-ratio rounded-lg bg-slate-900" />
+                                                    
+                                                    <div className="mt-2.5 px-1 flex-grow flex flex-col justify-end">
+                                                        <div className="flex items-start justify-between gap-1">
+                                                            <p className="text-white font-bold text-sm leading-tight line-clamp-2">{card.name}</p>
+                                                            {card.prices?.primary && (
+                                                                <span className="text-xs font-extrabold text-emerald-400 flex-shrink-0">
+                                                                    ${card.prices.primary.toFixed(2)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex justify-between items-center mt-1.5">
+                                                            <div className="flex flex-col">
+                                                                <p className="text-slate-300 text-xs">{card.set} #{card.number}</p>
+                                                                <div className="flex gap-0.5 mt-1" onClick={e => e.stopPropagation()}>
+                                                                    {Array.from({length: 5}).map((_, i) => {
+                                                                        const star = i + 1;
+                                                                        return (
+                                                                            <button
+                                                                                key={i}
+                                                                                onClick={() => handleUpdateCard({...card, rating: card.rating === star ? 0 : star})}
+                                                                                className="focus:outline-none"
+                                                                            >
+                                                                                <Icons.Pokeball 
+                                                                                    className={`w-3.5 h-3.5 ${star <= (card.rating || 0) ? 'text-red-500 fill-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)]' : 'text-slate-500 hover:text-slate-300'}`} 
+                                                                                />
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-[10px] uppercase tracking-wider text-slate-300 oras-subpanel px-1.5 py-0.5">
+                                                                {card.category ? card.category.substring(0,3) : 'CRD'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
+                        {/* Collapsible Right-Side Deck Window */}
+                        <DeckWindow
+                            isOpen={isDeckWindowOpen}
+                            onToggle={() => setIsDeckWindowOpen(!isDeckWindowOpen)}
+                            decks={decks}
+                            activeDeckId={activeDeckId}
+                            onSelectDeck={setActiveDeckId}
+                            onCreateDeck={handleCreateDeck}
+                            onUpdateDeckMeta={handleUpdateDeckMeta}
+                            onDeleteDeck={handleDeleteDeck}
+                            onMoveOneToDeck={(card, dId) => handleMoveToDeck(card, dId, 1)}
+                            onRemoveFromDeck={handleRemoveFromDeck}
+                            onOpenCardFullView={(c) => setSelectedCardKey(`${c.set}-${c.number}`)}
+                        />
+                    </div>
+
+                    {/* Full View Modal */}
+                    {selectedCard && (
+                        <CardModal 
+                            card={selectedCard} 
+                            decks={decks}
+                            activeDeckId={activeDeckId}
+                            onClose={() => setSelectedCardKey(null)} 
+                            onUpdateCard={handleUpdateCard}
+                            onMoveToDeck={handleMoveToDeck}
+                            onRemoveFromDeck={handleRemoveFromDeck}
+                        />
+                    )}
+
+                    {/* Import Text Modal */}
+                    {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={handleImport} />}
+                    
+                    {/* Clear Database Confirmation Modal */}
+                    {showClearConfirm && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+                            <div className="oras-modal-panel w-full max-w-sm overflow-hidden relative flex flex-col">
+                                <div className="p-6 border-b border-slate-700">
+                                    <h3 className="text-xl font-bold text-red-400 flex items-center gap-2"><Icons.Trash /> Clear Database & Decks</h3>
+                                </div>
+                                <div className="p-6">
+                                    <p className="text-slate-200 text-sm">Are you sure you want to delete all cards and decks from your local database? This cannot be undone unless you have exported a JSON backup.</p>
+                                </div>
+                                <div className="p-4 border-t border-slate-700 flex justify-end gap-3">
+                                    <button onClick={() => setShowClearConfirm(false)} className="px-4 py-2 rounded-lg font-bold text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                                    <button onClick={handleClearDatabase} className="px-4 py-2 rounded-lg font-bold bg-red-600 hover:bg-red-500 text-white transition shadow-lg">Yes, Clear All</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
