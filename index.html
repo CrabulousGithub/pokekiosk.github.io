@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PokéKiosk - Private Database</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Tailwind slate-900 */
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 5px; border: 2px solid #1e293b; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px -3px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 25px 2px rgba(59, 130, 246, 0.6); }
+        }
+        
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+        
+        .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-hover:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+            z-index: 10;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="root" class="flex-grow flex flex-col h-screen overflow-hidden"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const Icons = {
+            Search: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+            Pokeball: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="2.05" y1="12" x2="21.95" y2="12"></line><circle cx="12" cy="12" r="3"></circle></svg>,
+            Upload: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>,
+            Filter: () => <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>,
+            Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        };
+
+        const DEFAULT_LIST = ``;
+
+        const LimitlessParser = {
+            getCardDetails: (setAbbrev, number) => {
+                // Map Limitless/PTCGO set codes to official Pokémon TCG API set codes
+                const setMap = {
+                    'EVO': 'xy12', 'DRM': 'sm75', 'SUM': 'sm1', 'BKP': 'xy9', 'FLI': 'sm6',
+                    'GRI': 'sm2', 'LOT': 'sm8', 'CES': 'sm7', 'FCO': 'xy10', 'PHF': 'xy4',
+                    'SLG': 'sm35', 'STS': 'xy11', 'CIN': 'sm4', 'AOR': 'xy7', 'UPR': 'sm5',
+                    'GEN': 'g1', 'PRC': 'xy5', 'FFI': 'xy3', 'XY': 'xy1', 'KSS': 'xy0',
+                    'ROS': 'xy6', 'SMP': 'smp', 'HIF': 'sm115', 'BUS': 'sm3', 'BKT': 'xy8',
+                    'XYP': 'xyp', 'FLF': 'xy2', 'GEN-RC': 'rc'
+                };
+                
+                let setId = setMap[setAbbrev] || setAbbrev.toLowerCase();
+                let formattedNumber = number;
+                
+                // Promos require prefixing the number
+                if (setAbbrev === 'SMP') formattedNumber = `SM${number}`;
+                if (setAbbrev === 'XYP') formattedNumber = `XY${number}`;
+                if (setAbbrev === 'GEN-RC') { setId = 'g1'; formattedNumber = `rc${number}`; }
+                
+                return {
+                    setId,
+                    number: formattedNumber,
+                    apiId: `${setId}-${formattedNumber}`
+                };
+            },
+
+            parse: (text) => {
+                const lines = text.split('\n');
+                const cards = [];
+                let category = 'Pokémon'; // Default
+                let idCounter = 0;
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    
+                    // Detect category change
+                    if (line.match(/^(Pokémon|Pokemon|Trainer|Energy):/i)) {
+                        category = line.split(':')[0].trim().replace('Pokemon', 'Pokémon');
+                        continue;
+                    }
+                    
+                    // Parse Limitless format
+                    const match = line.match(/^(\d+)\s+(.+?)\s+([A-Z0-9-]{2,6})\s+([0-9a-zA-Z]+)$/);
+                    if (match) {
+                        const details = LimitlessParser.getCardDetails(match[3], match[4]);
+                        cards.push({
+                            id: `card-${idCounter++}`,
+                            count: parseInt(match[1], 10),
+                            name: match[2],
+                            set: match[3],
+                            number: match[4],
+                            category: category,
+                            officialSetId: details.setId,
+                            apiId: details.apiId,
+                            imageUrl: `https://images.pokemontcg.io/${details.setId}/${details.number}.png`,
+                            types: [], // Will be populated by auto-enricher
+                            subtypes: [], // Will be populated by auto-enricher
+                            rating: 0,
+                            enriched: false
+                        });
+                    }
+                }
+                return cards;
+            }
+        };
+
+        const LazyImage = ({ src, alt, className }) => {
+            const [status, setStatus] = useState('loading'); // loading, loaded, error
+            const fallbackImage = 'https://images.pokemontcg.io/cardback.png';
+            
+            return (
+                <div className={`relative ${className}`}>
+                    {status === 'loading' && (
+                        <div className="absolute inset-0 bg-slate-800 animate-pulse rounded-xl flex items-center justify-center">
+                            <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                        </div>
+                    )}
+                    <img 
+                        src={status === 'error' ? fallbackImage : src} 
+                        alt={alt}
+                        className={`w-full h-full object-cover transition-opacity duration-300 ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`}
+                        onLoad={() => setStatus('loaded')}
+                        onError={() => setStatus('error')}
+                    />
+                </div>
+            );
+        };
+
+        const CardModal = ({ card, onClose, onUpdateCard }) => {
+            if (!card) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-fade-in" onClick={onClose}>
+                    <div className="bg-slate-800 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        
+                        <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-slate-900 hover:bg-slate-700 text-white p-3 rounded-full transition-colors border border-slate-600 shadow-lg">
+                            <Icons.X />
+                        </button>
+
+                        <div className="w-full md:w-1/2 p-6 flex items-center justify-center bg-slate-900/50">
+                            <LazyImage src={card.imageUrl} alt={card.name} className="w-full max-w-sm" />
+                        </div>
+
+                        <div className="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto no-scrollbar flex flex-col justify-center">
+                            <div className="mb-2 text-blue-400 font-bold uppercase tracking-widest text-sm">
+                                {card.category} Card
+                            </div>
+                            <h2 className="text-4xl font-extrabold text-white mb-2">{card.name}</h2>
+                            
+                            <div className="flex gap-2 mb-6">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                    <button
+                                        key={star}
+                                        onClick={() => onUpdateCard && onUpdateCard({...card, rating: card.rating === star ? 0 : star})}
+                                        className={`transition-transform transform hover:scale-110 focus:outline-none`}
+                                    >
+                                        <Icons.Pokeball 
+                                            className={`w-8 h-8 ${star <= (card.rating || 0) ? 'text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-slate-600 hover:text-red-400/50'}`} 
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            <div className="space-y-4 bg-slate-900 rounded-2xl p-6 border border-slate-700">
+                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                                    <span className="text-slate-400">Set Code</span>
+                                    <span className="font-bold text-white px-3 py-1 bg-slate-800 rounded-lg">{card.set}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                                    <span className="text-slate-400">Card Number</span>
+                                    <span className="font-bold text-white px-3 py-1 bg-slate-800 rounded-lg">#{card.number}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400">Quantity in Database</span>
+                                    <span className="font-bold text-emerald-400 text-xl px-3 py-1 bg-emerald-900/30 rounded-lg">{card.count}x</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ImportModal = ({ onClose, onImport }) => {
+            const [text, setText] = useState('');
+            
+            const handleSave = () => {
+                const parsed = LimitlessParser.parse(text);
+                if(parsed.length > 0) {
+                    onImport(parsed);
+                } else {
+                    alert("No valid cards found. Ensure it matches the Limitless format.");
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-fade-in">
+                    <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl relative flex flex-col h-[80vh]">
+                        <div className="p-6 border-b border-slate-700 flex justify-between items-center">
+                            <h3 className="text-2xl font-bold">Import Text List</h3>
+                            <button onClick={onClose} className="text-slate-400 hover:text-white"><Icons.X /></button>
+                        </div>
+                        <div className="flex-grow p-6 flex flex-col">
+                            <p className="text-slate-400 mb-4 text-sm">Paste a Limitless TCG formatted decklist below to overwrite the database.</p>
+                            <textarea 
+                                value={text}
+                                onChange={e => setText(e.target.value)}
+                                className="flex-grow bg-slate-900 border border-slate-700 rounded-xl p-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-sm resize-none"
+                                placeholder="4 Pikachu EVO 35&#10;2 Boss's Orders SHF 58&#10;..."
+                            ></textarea>
+                        </div>
+                        <div className="p-6 border-t border-slate-700 flex justify-end gap-4 bg-slate-800/80">
+                            <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                            <button onClick={handleSave} className="px-6 py-3 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 text-white transition shadow-lg shadow-blue-900/50">Save & Import</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [dbCards, setDbCards] = useState([]);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [categoryFilter, setCategoryFilter] = useState('All');
+            const [typeFilter, setTypeFilter] = useState('All');
+            const [specialFilter, setSpecialFilter] = useState('All');
+            const [trainerFilter, setTrainerFilter] = useState('All');
+            const [setFilter, setSetFilter] = useState('All');
+            const [energyFilter, setEnergyFilter] = useState('All');
+            
+            const [isEnriching, setIsEnriching] = useState(false);
+            const [selectedCard, setSelectedCard] = useState(null);
+            const [showImport, setShowImport] = useState(false);
+            const [showClearConfirm, setShowClearConfirm] = useState(false);
+            
+            const POKEMON_TYPES = [
+                { label: 'Grass', value: 'Grass' },
+                { label: 'Fire', value: 'Fire' },
+                { label: 'Water', value: 'Water' },
+                { label: 'Lightning', value: 'Lightning' },
+                { label: 'Psychic', value: 'Psychic' },
+                { label: 'Fighting', value: 'Fighting' },
+                { label: 'Dark', value: 'Darkness' },
+                { label: 'Steel', value: 'Metal' },
+                { label: 'Fairy', value: 'Fairy' },
+                { label: 'Dragon', value: 'Dragon' },
+                { label: 'Colorless', value: 'Colorless' }
+            ];
+            const SPECIAL_TYPES = ['EX', 'GX', 'BREAK', 'V', 'VMAX', 'VSTAR', 'Prism Star'];
+            const TRAINER_TYPES = ['Item', 'Supporter', 'Tool', 'Stadium'];
+
+            // Initialize Database
+            useEffect(() => {
+                const savedData = localStorage.getItem('pokeKioskDB');
+                if (savedData) {
+                    try {
+                        let parsed = JSON.parse(savedData);
+                        
+                        // One-time migration to repair databases broken by previous API rate limits
+                        const version = localStorage.getItem('pokeKioskVersion');
+                        if (version !== '1.2') {
+                            parsed = parsed.map(c => ({ ...c, enriched: false }));
+                            localStorage.setItem('pokeKioskVersion', '1.2');
+                        }
+                        
+                        setDbCards(parsed);
+                    } catch (e) {
+                        setDbCards([]);
+                    }
+                } else {
+                    setDbCards([]);
+                }
+            }, []);
+
+            // Auto-Enrich Database with Types & Subtypes sequentially
+            useEffect(() => {
+                const enrichDatabase = async () => {
+                    const missing = dbCards.filter(c => !c.enriched);
+                    if (missing.length === 0 || isEnriching) return;
+
+                    setIsEnriching(true);
+                    // Reduce batch size to 10 to prevent "Failed to fetch" connection drops
+                    const batch = missing.slice(0, 10);
+                    
+                    // Safety check to ensure we only query valid IDs
+                    const validBatch = batch.filter(c => c.apiId);
+                    if (validBatch.length === 0) {
+                        setDbCards(prev => prev.map(c => batch.some(b => b.id === c.id) ? { ...c, enriched: true } : c));
+                        setIsEnriching(false);
+                        return;
+                    }
+
+                    const queryStr = validBatch.map(c => `id:"${c.apiId}"`).join(' OR ');
+                    const encodedQuery = encodeURIComponent(`(${queryStr})`);
+                    
+                    try {
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&select=id,types,subtypes,supertype,hp,attacks,abilities,rules`);
+                        
+                        // If rate limited or server overloaded, pause and retry the SAME batch instead of skipping
+                        if (res.status === 429 || res.status >= 500) {
+                            console.warn(`API rate limited/server error (${res.status}). Retrying batch in 5s...`);
+                            setIsEnriching(false);
+                            setTimeout(() => setDbCards(prev => [...prev]), 5000);
+                            return;
+                        }
+
+                        if (!res.ok) {
+                            throw new Error(`API Request Failed with status ${res.status}`);
+                        }
+                        
+                        const json = await res.json();
+                        
+                        if (json.data) {
+                            const enrichedMap = {};
+                            // Ensure ID mapping is fully case-insensitive
+                            json.data.forEach(d => { enrichedMap[d.id.toLowerCase()] = d; });
+                            
+                            setDbCards(prev => {
+                                const updated = prev.map(c => {
+                                    const lookupId = c.apiId ? c.apiId.toLowerCase() : '';
+                                    if (enrichedMap[lookupId]) {
+                                        return {
+                                            ...c,
+                                            types: enrichedMap[lookupId].types || [],
+                                            subtypes: enrichedMap[lookupId].subtypes || [],
+                                            category: enrichedMap[lookupId].supertype || c.category,
+                                            hp: enrichedMap[lookupId].hp || null,
+                                            attacks: enrichedMap[lookupId].attacks || [],
+                                            abilities: enrichedMap[lookupId].abilities || [],
+                                            rules: enrichedMap[lookupId].rules || [],
+                                            enriched: true
+                                        };
+                                    }
+                                    // If not found in API, mark as enriched to prevent infinite loops
+                                    if (batch.some(b => b.id === c.id)) return { ...c, enriched: true };
+                                    return c;
+                                });
+                                localStorage.setItem('pokeKioskDB', JSON.stringify(updated));
+                                return updated;
+                            });
+                        }
+                    } catch (e) {
+                        console.error("Enrichment sequence failed for batch (Network Drop). Skipping to prevent freeze:", e.message);
+                        // Skip this batch if the API severs the connection so the rest of the database isn't blocked
+                        setDbCards(prev => {
+                            const updated = prev.map(c => {
+                                if (batch.some(b => b.id === c.id)) return { ...c, enriched: true };
+                                return c;
+                            });
+                            localStorage.setItem('pokeKioskDB', JSON.stringify(updated));
+                            return updated;
+                        });
+                    } finally {
+                        setIsEnriching(false);
+                    }
+                };
+
+                // Triggers sequence. Increased to 1200ms to prevent Cloudflare/CORS network drops.
+                const timeoutId = setTimeout(enrichDatabase, 1200); 
+                return () => clearTimeout(timeoutId);
+            }, [dbCards, isEnriching]);
+
+            const handleImport = (newCards) => {
+                // Intelligently merge new imported list with existing ratings and metadata
+                const existingMap = new Map(dbCards.map(c => [`${c.set}-${c.number}`, c]));
+                const mergedCards = newCards.map(nc => {
+                    const ext = existingMap.get(`${nc.set}-${nc.number}`);
+                    if (ext) {
+                        return { 
+                            ...nc, 
+                            rating: ext.rating || 0, 
+                            enriched: ext.enriched, 
+                            types: ext.types, 
+                            subtypes: ext.subtypes, 
+                            category: ext.category 
+                        };
+                    }
+                    return nc;
+                });
+
+                setDbCards(mergedCards);
+                localStorage.setItem('pokeKioskDB', JSON.stringify(mergedCards));
+                setShowImport(false);
+            };
+
+            const handleExportJSON = () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbCards));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "pokekiosk_backup.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            };
+
+            const handleImportJSON = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        if (Array.isArray(json)) {
+                            setDbCards(json);
+                            localStorage.setItem('pokeKioskDB', JSON.stringify(json));
+                        } else {
+                            console.error("Invalid backup file. Ensure it's a JSON array.");
+                        }
+                    } catch (err) {
+                        console.error("Error parsing JSON.");
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const handleClearDatabase = () => {
+                setDbCards([]);
+                localStorage.removeItem('pokeKioskDB');
+                setShowClearConfirm(false);
+            };
+
+            const handleUpdateCard = (updatedCard) => {
+                setDbCards(prev => {
+                    const newCards = prev.map(c => c.id === updatedCard.id ? updatedCard : c);
+                    localStorage.setItem('pokeKioskDB', JSON.stringify(newCards));
+                    return newCards;
+                });
+                if (selectedCard && selectedCard.id === updatedCard.id) {
+                    setSelectedCard(updatedCard);
+                }
+            };
+
+            const uniqueSets = useMemo(() => {
+                const sets = {};
+                dbCards.forEach(c => {
+                    if(!sets[c.set]) sets[c.set] = c.officialSetId;
+                });
+                return Object.keys(sets).map(k => ({ label: k, id: sets[k] })).sort((a,b) => a.label.localeCompare(b.label));
+            }, [dbCards]);
+
+            const filteredCards = useMemo(() => {
+                return dbCards.filter(card => {
+                    let matchesSearch = false;
+                    const term = searchTerm.toLowerCase();
+                    const isDeepSearch = term.startsWith('"') && term.endsWith('"') && term.length > 2;
+                    const cleanTerm = isDeepSearch ? term.slice(1, -1).trim() : term;
+
+                    if (!searchTerm) {
+                        matchesSearch = true;
+                    } else if (isDeepSearch) {
+                        const inName = card.name.toLowerCase().includes(cleanTerm);
+                        const inHp = card.hp && card.hp.includes(cleanTerm);
+                        const inAttacks = card.attacks && card.attacks.some(a => (a.name && a.name.toLowerCase().includes(cleanTerm)) || (a.text && a.text.toLowerCase().includes(cleanTerm)));
+                        const inAbilities = card.abilities && card.abilities.some(a => (a.name && a.name.toLowerCase().includes(cleanTerm)) || (a.text && a.text.toLowerCase().includes(cleanTerm)));
+                        const inRules = card.rules && card.rules.some(r => r.toLowerCase().includes(cleanTerm));
+                        matchesSearch = inName || inHp || inAttacks || inAbilities || inRules;
+                    } else {
+                        matchesSearch = card.name.toLowerCase().includes(cleanTerm);
+                    }
+
+                    const matchesCategory = categoryFilter === 'All' || (card.category && card.category.includes(categoryFilter));
+                    
+                    let matchesType = true;
+                    if (categoryFilter === 'Pokémon' && typeFilter !== 'All') {
+                        // Safely check types using case-insensitive matching
+                        matchesType = card.types && Array.isArray(card.types) && card.types.some(t => t.toLowerCase() === typeFilter.toLowerCase());
+                    }
+                    
+                    let matchesSpecial = true;
+                    if (categoryFilter === 'Pokémon' && specialFilter !== 'All') {
+                        const hasSubtype = card.subtypes && card.subtypes.some(sub => sub.toUpperCase() === specialFilter.toUpperCase());
+                        
+                        // Use word boundary to strictly match "V" or "EX" without matching "Voltorb" or "Eevee"
+                        // Also handles hyphens like "Mewtwo-EX" or "Tapu Lele-GX"
+                        const regex = new RegExp(`(^|[-\\s])${specialFilter}([-\\s]|$)`, 'i');
+                        const hasInName = regex.test(card.name);
+                        
+                        matchesSpecial = hasSubtype || hasInName;
+                    }
+                    
+                    let matchesTrainer = true;
+                    if (categoryFilter === 'Trainer' && trainerFilter !== 'All') {
+                        matchesTrainer = card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes(trainerFilter.toLowerCase()));
+                    }
+
+                    let matchesEnergy = true;
+                    if (categoryFilter === 'Energy' && energyFilter !== 'All') {
+                        // Smart fallback in case API enrichment hasn't fetched the subtype yet
+                        const isSpecial = (card.subtypes && card.subtypes.some(sub => sub.toLowerCase().includes('special'))) || 
+                                          card.name.toLowerCase().includes('special') || 
+                                          card.name.toLowerCase().includes('double') || 
+                                          card.name.toLowerCase().includes('rainbow') ||
+                                          card.name.toLowerCase().includes('prism');
+                        
+                        if (energyFilter === 'Special') matchesEnergy = isSpecial;
+                        if (energyFilter === 'Basic') matchesEnergy = !isSpecial;
+                    }
+
+                    let matchesSet = true;
+                    if (setFilter !== 'All') {
+                        matchesSet = card.set === setFilter;
+                    }
+
+                    return matchesSearch && matchesCategory && matchesType && matchesSpecial && matchesTrainer && matchesEnergy && matchesSet;
+                });
+            }, [dbCards, searchTerm, categoryFilter, typeFilter, specialFilter, trainerFilter, energyFilter, setFilter]);
+
+            const totalCards = dbCards.reduce((acc, card) => acc + card.count, 0);
+            const uniqueCards = dbCards.length;
+            
+            const enrichmentProgress = useMemo(() => {
+                if (dbCards.length === 0) return { percent: 100, isComplete: true };
+                const enriched = dbCards.filter(c => c.enriched).length;
+                return { 
+                    percent: Math.round((enriched / dbCards.length) * 100), 
+                    isComplete: enriched === dbCards.length 
+                };
+            }, [dbCards]);
+
+            return (
+                <div className="flex flex-col h-full bg-slate-900 animate-fade-in">
+                    
+                    {/* Header Controls */}
+                    <div className="flex-none bg-slate-800 border-b border-slate-700 z-10 shadow-lg">
+                        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <img src="https://cdn.discordapp.com/attachments/1206757828950233178/1559379908914839674/crabulous_w_clippy.png?ex=6acedd36&is=6acd8bb6&hm=60d7747d6dedfa3f4f1abee4ae386e18548b33fdbd24281903de0a94da796919&" alt="Logo" className="w-12 h-12 object-contain drop-shadow-md hover:scale-105 transition-transform" />
+                                <div>
+                                    <h1 className="text-xl font-bold text-white tracking-tight leading-tight">Deckbuilder Pokedex</h1>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-xs text-slate-400">{totalCards} Total Cards • {uniqueCards} Unique</p>
+                                        {!enrichmentProgress.isComplete && (
+                                            <div className="flex items-center gap-1.5 bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-700/50 animate-pulse">
+                                                <div className="w-2.5 h-2.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
+                                                <span className="text-[10px] text-blue-300 font-semibold tracking-wide">Syncing Metadata... {enrichmentProgress.percent}%</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <button onClick={handleExportJSON} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors border border-slate-600">
+                                    Export JSON
+                                </button>
+                                <label className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors cursor-pointer border border-slate-600">
+                                    Load JSON
+                                    <input type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
+                                </label>
+                                <button onClick={() => setShowClearConfirm(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-900/60 hover:bg-red-800 rounded-lg text-sm font-semibold text-red-100 transition-colors border border-red-700/50">
+                                    <Icons.Trash /> Clear DB
+                                </button>
+                                <button onClick={() => setShowImport(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-blue-900/50">
+                                    <Icons.Upload /> Import Text
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Search & Filter Bar */}
+                        <div className="max-w-7xl mx-auto px-6 pb-6 flex flex-col gap-4">
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="relative flex-grow">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                        <Icons.Search />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        className="block w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
+                                        placeholder='Search name, or use "quotes" for attacks & abilities...'
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    {searchTerm && (
+                                        <button onClick={() => setSearchTerm('')} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white">
+                                            <Icons.X />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex bg-slate-900 border border-slate-700 rounded-xl p-1 overflow-x-auto no-scrollbar">
+                                    {['All', 'Pokémon', 'Trainer', 'Energy'].map(cat => (
+                                        <button 
+                                            key={cat}
+                                            onClick={() => {
+                                                setCategoryFilter(cat);
+                                                setTypeFilter('All');
+                                                setTrainerFilter('All');
+                                                setEnergyFilter('All');
+                                            }}
+                                            className={`px-5 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${categoryFilter === cat ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Conditional Sub-Filters */}
+                            {categoryFilter === 'Pokémon' && (
+                                <div className="flex flex-col gap-2 animate-slide-up">
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Type:</span>
+                                        <button 
+                                            onClick={() => setTypeFilter('All')} 
+                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${typeFilter === 'All' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                        >All</button>
+                                        {POKEMON_TYPES.map(pt => (
+                                            <button 
+                                                key={pt.value}
+                                                onClick={() => setTypeFilter(pt.value)}
+                                                className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${typeFilter === pt.value ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                            >{pt.label}</button>
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-3">
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Special:</span>
+                                        <button 
+                                            onClick={() => setSpecialFilter('All')} 
+                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${specialFilter === 'All' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                        >All</button>
+                                        {SPECIAL_TYPES.map(st => (
+                                            <button 
+                                                key={st}
+                                                onClick={() => setSpecialFilter(st)}
+                                                className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${specialFilter === st ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                            >{st}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {categoryFilter === 'Trainer' && (
+                                <div className="flex items-center gap-2 overflow-x-auto pb-3 animate-slide-up">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Class:</span>
+                                    <button 
+                                        onClick={() => setTrainerFilter('All')} 
+                                        className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${trainerFilter === 'All' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                    >All</button>
+                                    {TRAINER_TYPES.map(tt => (
+                                        <button 
+                                            key={tt}
+                                            onClick={() => setTrainerFilter(tt)}
+                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${trainerFilter === tt ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                        >{tt}</button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {categoryFilter === 'Energy' && (
+                                <div className="flex items-center gap-2 overflow-x-auto pb-3 animate-slide-up">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Type:</span>
+                                    {['All', 'Basic', 'Special'].map(et => (
+                                        <button 
+                                            key={et}
+                                            onClick={() => setEnergyFilter(et)}
+                                            className={`px-3 py-1.5 flex-shrink-0 rounded-full text-xs font-bold border transition-colors ${energyFilter === et ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                        >{et}</button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Set Icon Filters */}
+                            <div className="flex items-center gap-2 overflow-x-auto pb-4 pt-2 border-t border-slate-700/50">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 sticky left-0 bg-slate-800/90 backdrop-blur z-10 px-2 py-1 rounded flex-shrink-0">Set:</span>
+                                <button 
+                                    onClick={() => setSetFilter('All')} 
+                                    className={`px-4 py-1.5 flex-shrink-0 rounded-lg text-xs font-bold border transition-all ${setFilter === 'All' ? 'bg-slate-700 border-slate-500 text-white shadow' : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                >
+                                    All Sets
+                                </button>
+                                {uniqueSets.map(s => (
+                                    <button 
+                                        key={s.label}
+                                        onClick={() => setSetFilter(s.label)}
+                                        className={`flex items-center flex-shrink-0 gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${setFilter === s.label ? 'bg-slate-700 border-slate-400 text-white shadow-md' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                        title={s.label}
+                                    >
+                                        <img src={`https://images.pokemontcg.io/${s.id}/symbol.png`} alt={s.label} className="h-4 w-auto flex-shrink-0 object-contain filter invert opacity-90" onError={(e) => { e.target.style.display = 'none'; }} />
+                                        <span>{s.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Results Grid */}
+                    <div className="flex-grow overflow-y-auto p-6">
+                        <div className="max-w-7xl mx-auto h-full">
+                            {filteredCards.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4">
+                                    <Icons.Filter />
+                                    <p className="text-xl font-semibold">
+                                        {dbCards.length === 0 ? "No cards in database. Click 'Import Text' to start." : "No cards match your search."}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 pb-12 animate-slide-up">
+                                    {filteredCards.map(card => (
+                                        <button 
+                                            key={card.id} 
+                                            onClick={() => setSelectedCard(card)}
+                                            className="card-hover relative bg-slate-800 rounded-xl p-2 border border-slate-700 flex flex-col focus:outline-none text-left h-full"
+                                        >
+                                            {/* Quantity Badge */}
+                                            <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-blue-600 text-white text-xs font-black px-2 py-1 rounded-full shadow-lg z-10 border-2 border-slate-900">
+                                                {card.count}x
+                                            </div>
+                                            
+                                            <LazyImage src={card.imageUrl} alt={card.name} className="w-full aspect-[63/88] rounded-lg bg-slate-900" />
+                                            
+                                            <div className="mt-3 px-1 flex-grow flex flex-col justify-end">
+                                                <p className="text-white font-bold text-sm leading-tight line-clamp-2">{card.name}</p>
+                                                <div className="flex justify-between items-center mt-1">
+                                                    <div className="flex flex-col">
+                                                        <p className="text-slate-400 text-xs">{card.set} {card.number}</p>
+                                                        <div className="flex gap-0.5 mt-1">
+                                                            {Array.from({length: 5}).map((_, i) => {
+                                                                const star = i + 1;
+                                                                return (
+                                                                    <Icons.Pokeball 
+                                                                        key={i} 
+                                                                        className={`w-3.5 h-3.5 ${star <= (card.rating || 0) ? 'text-red-500 fill-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)]' : 'text-slate-600'}`} 
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">{card.category.substring(0,3)}</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Modals */}
+                    {selectedCard && <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} onUpdateCard={handleUpdateCard} />}
+                {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={handleImport} />}
+                
+                {showClearConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-fade-in">
+                        <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl relative flex flex-col">
+                            <div className="p-6 border-b border-slate-700">
+                                <h3 className="text-xl font-bold text-red-400 flex items-center gap-2"><Icons.Trash /> Clear Database</h3>
+                            </div>
+                            <div className="p-6">
+                                <p className="text-slate-300">Are you sure you want to delete all cards from your local database? This cannot be undone unless you have a JSON backup.</p>
+                            </div>
+                            <div className="p-4 border-t border-slate-700 flex justify-end gap-3 bg-slate-800/80">
+                                <button onClick={() => setShowClearConfirm(false)} className="px-4 py-2 rounded-lg font-bold text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                                <button onClick={handleClearDatabase} className="px-4 py-2 rounded-lg font-bold bg-red-600 hover:bg-red-500 text-white transition shadow-lg shadow-red-900/50">Yes, Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
